@@ -1,0 +1,10 @@
+.env
+.env
+__pycache__/
+*.pyc
+*.pkl
+*.json
+*.db
+.venv/
+rag_venv/
+health_progress/
