@@ -1,6 +1,7 @@
 
 
 
+
 # # app.py
 # import streamlit as st
 # import numpy as np
@@ -16,6 +17,8 @@
 # import pytesseract
 # from PIL import Image
 # import google.generativeai as genai
+# from groq import Groq
+# from dotenv import load_dotenv
 # from auth import login_user, register_user, get_role
 # from rag_chatbot import create_rag
 
@@ -34,31 +37,90 @@
 # st.set_page_config(page_title="MediAI Connect", layout="wide", page_icon="🏥")
 
 # # ─────────────────────────────────────────────────────────────────────────────
-# # DUAL API KEY SETUP
+# # LOAD .env
 # # ─────────────────────────────────────────────────────────────────────────────
-# _API_KEYS = [
-#     "AIzaSyDKQlD9Fu09Hq4PQid5zvdcVisECJGB04s",   # Primary key
-#     "AIzaSyCB0_jW1ue2rZnb-BDOrIwIISDt9i9rguc",              # Fallback key ← replace this
-# ]
+# load_dotenv()
+
+# # ─────────────────────────────────────────────────────────────────────────────
+# # GEMINI DUAL-KEY SETUP
+# # ─────────────────────────────────────────────────────────────────────────────
+# def _load_api_keys() -> list:
+#     """Read GEMINI_API_KEY from .env — supports comma-separated multiple keys."""
+#     raw = os.environ.get("GEMINI_API_KEY", "").strip()
+#     if not raw:
+#         st.error("❌ GEMINI_API_KEY not found in .env file. Please add it.")
+#         return []
+#     keys = [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
+#     return keys
+
+# _API_KEYS = _load_api_keys()
 
 # def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash") -> str:
 #     """
-#     Generate text using Gemini, automatically falling back to the
-#     second API key if the primary key fails (quota / auth error).
+#     Generate text using Gemini with automatic API key fallback.
+#     Tries each key in _API_KEYS in order.
 #     """
+#     if not _API_KEYS:
+#         return "⚠️ No Gemini API keys configured. Check your .env file."
+
 #     last_error = None
-#     for key in _API_KEYS:
+#     for i, key in enumerate(_API_KEYS):
 #         try:
 #             genai.configure(api_key=key)
 #             model = genai.GenerativeModel(model_name)
 #             return model.generate_content(prompt).text
 #         except Exception as e:
 #             last_error = e
+#             if i < len(_API_KEYS) - 1:
+#                 print(f"⚠️ Gemini key {i+1} failed: {e}. Trying key {i+2}…")
 #             continue
-#     return f"⚠️ All API keys failed. Last error: {last_error}"
 
-# # Configure with primary key on startup
-# genai.configure(api_key=_API_KEYS[0])
+#     return f"⚠️ All Gemini API keys failed. Last error: {last_error}"
+
+# # Configure genai with the first available key on startup
+# if _API_KEYS:
+#     genai.configure(api_key=_API_KEYS[0])
+
+# # ─────────────────────────────────────────────────────────────────────────────
+# # GROQ DUAL-KEY SETUP
+# # ─────────────────────────────────────────────────────────────────────────────
+# def _load_groq_keys() -> list:
+#     """Read GROQ_API_KEY from .env — supports comma-separated multiple keys."""
+#     raw = os.environ.get("GROQ_API_KEY", "").strip()
+#     if not raw:
+#         st.warning("⚠️ GROQ_API_KEY not found in .env file.")
+#         return []
+#     keys = [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
+#     return keys
+
+# _GROQ_KEYS = _load_groq_keys()
+# def groq_generate(prompt: str, system: str, model: str = "llama-3.1-8b-instant") -> str:
+#     """
+#     Generate text using Groq with automatic key fallback.
+#     Tries each key in _GROQ_KEYS in order. Same pattern as gemini_generate.
+#     """
+#     if not _GROQ_KEYS:
+#         return "⚠️ No Groq API keys configured. Check your .env file."
+
+#     last_error = None
+#     for i, key in enumerate(_GROQ_KEYS):
+#         try:
+#             client = Groq(api_key=key)
+#             response = client.chat.completions.create(
+#                 model=model,
+#                 messages=[
+#                     {"role": "system", "content": system},
+#                     {"role": "user",   "content": prompt}
+#                 ]
+#             )
+#             return response.choices[0].message.content
+#         except Exception as e:
+#             last_error = e
+#             if i < len(_GROQ_KEYS) - 1:
+#                 print(f"⚠️ Groq key {i+1} failed: {e}. Trying key {i+2}…")
+#             continue
+
+#     return f"⚠️ All Groq keys failed. Last error: {last_error}"
 
 # # ─────────────────────────────────────────────────────────────────────────────
 # # BLUR FIX
@@ -278,7 +340,7 @@
 #     color:#3b5988; line-height:1.7;
 # }
 
-# /* ── Chatbot history panel — original dark styling ── */
+# /* ── Chatbot history panel ── */
 # .hist-box-anchor { display:none; }
 # div[data-testid="stVerticalBlock"]:has(.hist-box-anchor) .stButton > button {
 #     background: transparent !important;
@@ -354,7 +416,7 @@
 # # ─────────────────────────────────────────────────────────────────────────────
 # @st.cache_resource
 # def load_rag():
-#     return create_rag(_API_KEYS[0])
+#     return create_rag(_API_KEYS[0] if _API_KEYS else "")
 
 # def _pick_best_model(disease_key: str, disease_col: str):
 #     metrics_path = "models/model_metrics.json"
@@ -474,7 +536,7 @@
 #     return ""
 
 # # ─────────────────────────────────────────────────────────────────────────────
-# # AI SUMMARY HELPER
+# # AI SUMMARY HELPER  (uses Gemini — unchanged)
 # # ─────────────────────────────────────────────────────────────────────────────
 # def generate_ai_health_summary(age, bmi, glucose, diabetes, hyper, cardio, kidney) -> str:
 #     prompt = f"""You are a medical assistant.
@@ -600,7 +662,7 @@
 #     return []
 
 # # ─────────────────────────────────────────────────────────────────────────────
-# # CHATBOT PERSISTENCE HELPERS  (50-session cap, no UI counter shown)
+# # CHATBOT PERSISTENCE HELPERS
 # # ─────────────────────────────────────────────────────────────────────────────
 # CHAT_DIR          = "chat_history"
 # MAX_CHAT_SESSIONS = 50
@@ -618,7 +680,6 @@
 #     return []
 
 # def _save_user_history(username: str, sessions: list):
-#     """Save sessions capped at MAX_CHAT_SESSIONS — oldest pruned silently."""
 #     if len(sessions) > MAX_CHAT_SESSIONS:
 #         sessions = sessions[:MAX_CHAT_SESSIONS]
 #         st.session_state.chat_sessions = sessions
@@ -790,7 +851,6 @@
 #         "vertical-align:middle;margin-left:0.3rem;'>ADMIN</span>"
 #         if role == "admin" else ""
 #     )
-
 #     _logo_b64 = _sidebar_logo_b64()
 #     if _logo_b64:
 #         _logo_html = (
@@ -828,7 +888,6 @@
 #     }
 #     div[data-testid="stSidebar"] .home-btn .stButton > button:hover {
 #         background: linear-gradient(135deg,#2563eb,#1e40af) !important;
-#         box-shadow: 0 5px 16px rgba(59,130,246,0.55) !important;
 #     }
 #     div[data-testid="stSidebar"] .nav-btn .stButton > button {
 #         background: rgba(255,255,255,0.05) !important;
@@ -859,7 +918,6 @@
 #     }
 #     div[data-testid="stSidebar"] .admin-btn .stButton > button:hover {
 #         background: rgba(245,158,11,0.28) !important;
-#         border-color: rgba(245,158,11,0.65) !important;
 #     }
 #     div[data-testid="stSidebar"] .admin-btn-active .stButton > button {
 #         background: rgba(245,158,11,0.3) !important;
@@ -894,10 +952,10 @@
 #         ("🔬", "Future Glucose Prediction", "Regression ML"),
 #         ("🧪", "Lab Report Analysis",       "OCR + Gemini"),
 #         ("💬", "Medical Chatbot",           "RAG + FAISS"),
-#         ("🏥", "Symptom Checker",           "Gemini AI"),
-#         ("📊", "BMI & Health Score",        "Health Grade"),
-#         ("🍎", "Diet Recommender",          "7-Day Meal"),
-#         ("💊", "Medication Info",           "Drug Info"),
+#         ("🏥", "Symptom Checker",           "Groq llama3"),
+#         ("📊", "BMI & Health Score",        "Groq llama3"),
+#         ("🍎", "Diet Recommender",          "Groq llama3"),
+#         ("💊", "Medication Info",           "Groq llama3"),
 #         ("📈", "Model Insights",            "SHAP + Metrics"),
 #     ]
 
@@ -978,7 +1036,6 @@
 # # ROUTING
 # # =============================================================================
 # if menu == "About":
-#     # ── Hero banner with all feature badges — fully restored ──────────────
 #     if os.path.exists("assets/robot_hand.jpg"):
 #         with open("assets/robot_hand.jpg", "rb") as f:
 #             img_b64 = base64.b64encode(f.read()).decode()
@@ -1044,16 +1101,16 @@
 #         **Core ML Features:**
 #         - 🩺 Predicts risk for Diabetes, Hypertension, Cardiovascular & Kidney disease
 #         - 🔬 Forecasts future glucose levels with age-trend graphs
-#         - 🧪 Analyses lab reports using OCR + Gemini AI in 10 languages
+#         - 🧪 Analyses lab reports using OCR + Gemini AI
 #         - 💬 Answers medical questions using a RAG-powered chatbot
 #         - 📅 Tracks your health progress over time with trend graphs
-#         - 📈 Explains model predictions with Feature Importance & SHAP
+#         - 📈 Explains model predictions with Feature Importance
 
-#         **New Health Tools:**
-#         - 🏥 Symptom Checker powered by Gemini AI
-#         - 📊 BMI & Health Score with A–F grading
-#         - 🍎 Personalised 7-day Diet & Meal Planner
-#         - 💊 Medication Information & Reminder Scheduler
+#         **New Health Tools (Powered by Groq):**
+#         - 🏥 Symptom Checker — llama3-8b
+#         - 📊 BMI & Health Score — llama3-8b
+#         - 🍎 Personalised 7-day Diet & Meal Planner — llama3-8b
+#         - 💊 Medication Information — llama3-8b
 #         """)
 #     with col_b:
 #         st.markdown("""
@@ -1063,19 +1120,15 @@
 #         |---|---|
 #         | Disease Risk | XGBoost + MLP Neural Net |
 #         | Glucose Forecast | LinearReg + MLP Regressor |
-#         | Explainability | SHAP + Feature Importance |
 #         | AI Summary | Gemini 2.5 Flash (dual-key) |
+#         | Symptom / BMI / Diet / Medication | Groq llama3-8b (dual-key) |
 #         | Lab OCR | Tesseract + PIL |
 #         | Chatbot | RAG + FAISS + LangChain |
 #         | Progress | JSON longitudinal storage |
-#         | Symptom Check | Gemini 2.5 Flash |
-#         | Diet Plan | Gemini 2.5 Flash |
-#         | Drug Info | Gemini 2.5 Flash |
 #         | Auth | bcrypt password hashing |
 
 #         **Dataset:** 1,700 clinical records, 9 features, 4 disease targets
 #         """)
-
 #     st.info("💡 Use the sidebar to navigate between all 10 features.")
 
 # elif menu == "Disease Risk Prediction":
@@ -1106,13 +1159,13 @@
 
 # elif menu == "Symptom Checker":
 #     st.session_state["_sym_user"] = username
-#     show_symptom_checker(show_loader)
+#     show_symptom_checker(show_loader, groq_generate=groq_generate)
 
 # elif menu == "BMI & Health Score":
-#     show_bmi_calculator(show_loader)
+#     show_bmi_calculator(show_loader, groq_generate=groq_generate)
 
 # elif menu == "Diet Recommender":
-#     show_diet_recommender(show_loader, username=username)
+#     show_diet_recommender(show_loader, username=username, groq_generate=groq_generate)
 
 # elif menu == "Medication Info":
 #     show_medication_info(show_loader, username=username)
@@ -1157,7 +1210,8 @@ import json
 import pytesseract
 from PIL import Image
 import google.generativeai as genai
-from dotenv import load_dotenv          # ← reads .env file
+from groq import Groq
+from dotenv import load_dotenv
 from auth import login_user, register_user, get_role
 from rag_chatbot import create_rag
 
@@ -1176,55 +1230,105 @@ from reportlab.lib.enums import TA_CENTER
 st.set_page_config(page_title="MediAI Connect", layout="wide", page_icon="🏥")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DUAL API KEY SETUP — reads from .env
-#
-# Your .env file should look like:
-#   GEMINI_API_KEY=key1,key2
-#
-# Keys are split by comma. Primary is tried first; if it fails
-# (quota / auth error), the next key is tried automatically.
+# LOAD .env
 # ─────────────────────────────────────────────────────────────────────────────
-load_dotenv()   # load variables from .env into environment
+load_dotenv()
 
-def _load_api_keys() -> list:
-    """Read GEMINI_API_KEY from .env — supports comma-separated multiple keys."""
-    raw = os.environ.get("GEMINI_API_KEY", "").strip()
+# ─────────────────────────────────────────────────────────────────────────────
+# GEMINI DUAL-KEY SETUP
+# .env format:  GEMINI_API_KEY=key1,key2
+# ─────────────────────────────────────────────────────────────────────────────
+def _load_keys(env_var: str) -> list:
+    raw = os.environ.get(env_var, "").strip()
     if not raw:
-        st.error("❌ GEMINI_API_KEY not found in .env file. Please add it.")
         return []
-    # Split by comma, strip spaces/quotes around each key
-    keys = [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
-    return keys
+    return [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
 
-_API_KEYS = _load_api_keys()
+_API_KEYS  = _load_keys("GEMINI_API_KEY")
+_GROQ_KEYS = _load_keys("GROQ_API_KEY")
 
-def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash") -> str:
+if not _API_KEYS:
+    st.error("❌ GEMINI_API_KEY not found in .env file.")
+if not _GROQ_KEYS:
+    st.warning("⚠️ GROQ_API_KEY not found in .env — Symptom, BMI, Diet, Medication features won't work.")
+
+# Configure genai with first key on startup
+if _API_KEYS:
+    genai.configure(api_key=_API_KEYS[0])
+
+def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
+                    feature: str = "general") -> str:
     """
-    Generate text using Gemini with automatic API key fallback.
-    Tries each key in _API_KEYS in order. Uses the next key if the
-    current one raises any exception (quota, auth, network etc.).
+    Gemini with automatic key fallback.
+    Logs every call to api_usage_log.json for the admin dashboard.
     """
-    if not _API_KEYS:
-        return "⚠️ No Gemini API keys configured. Check your .env file."
-
     last_error = None
     for i, key in enumerate(_API_KEYS):
         try:
             genai.configure(api_key=key)
-            model = genai.GenerativeModel(model_name)
-            return model.generate_content(prompt).text
+            model  = genai.GenerativeModel(model_name)
+            result = model.generate_content(prompt).text
+            # Log success
+            try:
+                from admin_panel import log_api_call
+                log_api_call("gemini", feature, True)
+            except Exception:
+                pass
+            return result
         except Exception as e:
             last_error = e
-            # Only log key switch if there's a next key to try
             if i < len(_API_KEYS) - 1:
-                print(f"⚠️ API key {i+1} failed: {e}. Trying key {i+2}…")
+                print(f"⚠️ Gemini key {i+1} failed: {e}. Trying key {i+2}…")
             continue
 
+    # All keys failed — log failure
+    try:
+        from admin_panel import log_api_call
+        log_api_call("gemini", feature, False)
+    except Exception:
+        pass
     return f"⚠️ All Gemini API keys failed. Last error: {last_error}"
 
-# Configure genai with the first available key on startup
-if _API_KEYS:
-    genai.configure(api_key=_API_KEYS[0])
+
+def groq_generate(prompt: str, system: str = "You are a helpful assistant.",
+                  model: str = "llama-3.1-8b-instant",
+                  feature: str = "general") -> str:
+    """
+    Groq with automatic key fallback.
+    Logs every call to api_usage_log.json for the admin dashboard.
+    """
+    last_error = None
+    for i, key in enumerate(_GROQ_KEYS):
+        try:
+            client   = Groq(api_key=key)
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user",   "content": prompt}
+                ]
+            )
+            result = response.choices[0].message.content
+            # Log success
+            try:
+                from admin_panel import log_api_call
+                log_api_call("groq", feature, True)
+            except Exception:
+                pass
+            return result
+        except Exception as e:
+            last_error = e
+            if i < len(_GROQ_KEYS) - 1:
+                print(f"⚠️ Groq key {i+1} failed: {e}. Trying key {i+2}…")
+            continue
+
+    # All keys failed — log failure
+    try:
+        from admin_panel import log_api_call
+        log_api_call("groq", feature, False)
+    except Exception:
+        pass
+    return f"⚠️ All Groq API keys failed. Last error: {last_error}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BLUR FIX
@@ -1348,10 +1452,8 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
     outline: none !important;
 }
 
-/* ── App background ── */
 .stApp { background: linear-gradient(135deg,#f0f4ff 0%,#fafbff 60%,#eef2ff 100%); }
 
-/* ── Sidebar ── */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);
     border-right: none;
@@ -1383,7 +1485,6 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
     background: rgba(239,68,68,0.28) !important; border-color:#ef4444 !important;
 }
 
-/* ── Buttons ── */
 .stButton > button {
     background: linear-gradient(135deg,#3b82f6,#2563eb);
     color: white !important; border: none; border-radius: 10px;
@@ -1408,7 +1509,6 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
     box-shadow:0 6px 20px rgba(139,92,246,0.45) !important; transform:translateY(-2px) !important;
 }
 
-/* ── Misc ── */
 .stProgress > div > div { background:linear-gradient(90deg,#3b82f6,#8b5cf6); border-radius:99px; }
 [data-testid="stMetric"] {
     background:white; border-radius:14px; padding:1rem 1.2rem;
@@ -1425,7 +1525,6 @@ div[data-testid="stStatusWidget"] { display:none !important; }
 [data-testid="stSpinner"] { display:none !important; }
 [data-testid="stDataFrame"] { border-radius:12px; overflow:hidden; }
 
-/* ── Login card ── */
 .login-card {
     max-width:460px; margin:2rem auto; background:white; border-radius:24px;
     padding:2.8rem 2.5rem;
@@ -1444,19 +1543,13 @@ div[data-testid="stStatusWidget"] { display:none !important; }
     color:#3b5988; line-height:1.7;
 }
 
-/* ── Chatbot history panel — original dark styling ── */
 .hist-box-anchor { display:none; }
 div[data-testid="stVerticalBlock"]:has(.hist-box-anchor) .stButton > button {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: #94a3b8 !important;
-    font-size: 0.82rem !important;
-    font-weight: 400 !important;
-    text-align: left !important;
-    justify-content: flex-start !important;
-    padding: 0.45rem 0.9rem !important;
-    border-radius: 0 !important;
+    background: transparent !important; border: none !important;
+    box-shadow: none !important; color: #94a3b8 !important;
+    font-size: 0.82rem !important; font-weight: 400 !important;
+    text-align: left !important; justify-content: flex-start !important;
+    padding: 0.45rem 0.9rem !important; border-radius: 0 !important;
     width: 100% !important;
     border-bottom: 1px solid rgba(255,255,255,0.04) !important;
     transition: background 0.12s, color 0.12s !important;
@@ -1516,11 +1609,10 @@ os.environ["TESSDATA_PREFIX"] = (
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MODEL LOADING
+# ML MODEL LOADING
 # ─────────────────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_rag():
-    # Pass the first API key to RAG
     return create_rag(_API_KEYS[0] if _API_KEYS else "")
 
 def _pick_best_model(disease_key: str, disease_col: str):
@@ -1631,7 +1723,7 @@ def show_loader(placeholder, message: str = "Processing…"):
         placeholder.info(f"⏳ {message}")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SIDEBAR LOGO HELPER
+# SIDEBAR LOGO
 # ─────────────────────────────────────────────────────────────────────────────
 def _sidebar_logo_b64() -> str:
     path = "assets/logo.avif"
@@ -1641,7 +1733,7 @@ def _sidebar_logo_b64() -> str:
     return ""
 
 # ─────────────────────────────────────────────────────────────────────────────
-# AI SUMMARY HELPER
+# AI SUMMARY (Gemini)
 # ─────────────────────────────────────────────────────────────────────────────
 def generate_ai_health_summary(age, bmi, glucose, diabetes, hyper, cardio, kidney) -> str:
     prompt = f"""You are a medical assistant.
@@ -1650,7 +1742,7 @@ Risks: Diabetes {diabetes:.2f}, Hypertension {hyper:.2f},
        Cardiovascular {cardio:.2f}, Kidney {kidney:.2f}
 1. Explain each risk simply  2. Identify most dangerous
 3. Give lifestyle suggestions  4. Keep it short and clear"""
-    return gemini_generate(prompt)
+    return gemini_generate(prompt, feature="disease_risk")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PDF HELPER
@@ -1767,7 +1859,7 @@ def load_progress(patient_id: str) -> list:
     return []
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CHATBOT PERSISTENCE HELPERS  (50-session cap)
+# CHATBOT HELPERS (50-session cap)
 # ─────────────────────────────────────────────────────────────────────────────
 CHAT_DIR          = "chat_history"
 MAX_CHAT_SESSIONS = 50
@@ -1861,7 +1953,7 @@ for key, val in [("chat", []), ("logged_in", False), ("auth_tab", "Login")]:
         st.session_state[key] = val
 
 # =============================================================================
-# LOGIN / REGISTER SCREEN
+# LOGIN / REGISTER
 # =============================================================================
 if not st.session_state.logged_in:
     st.markdown("""
@@ -1907,14 +1999,12 @@ if not st.session_state.logged_in:
                         "<style>body,.stApp,.main,[data-testid='stAppViewContainer']"
                         "{visibility:hidden !important;}</style>"
                         "<div style='position:fixed;inset:0;z-index:99999;"
-                        "background:#f0f4ff;"
-                        "display:flex;flex-direction:column;"
+                        "background:#f0f4ff;display:flex;flex-direction:column;"
                         "align-items:center;justify-content:center;gap:1.2rem;'>"
                         + gif_tag +
                         f"<p style='font-family:DM Sans,sans-serif;font-size:1.1rem;"
                         f"color:#1e3a5f;font-weight:600;margin:0;'>"
-                        f"Welcome back, {username}! Loading…</p>"
-                        "</div>",
+                        f"Welcome back, {username}! Loading…</p></div>",
                         unsafe_allow_html=True
                     )
                     st.rerun()
@@ -1957,15 +2047,12 @@ with st.sidebar:
         if role == "admin" else ""
     )
     _logo_b64 = _sidebar_logo_b64()
-    if _logo_b64:
-        _logo_html = (
-            "<div style='text-align:center;margin-bottom:0.3rem;padding-top:0.8rem;'>"
-            "<img src='data:image/avif;base64," + _logo_b64 + "'"
-            " style='width:80px;height:80px;object-fit:contain;border-radius:14px;'>"
-            "</div>"
-        )
-    else:
-        _logo_html = "<div style='font-size:2.5rem;text-align:center;padding-top:0.8rem;'>🏥</div>"
+    _logo_html = (
+        "<div style='text-align:center;margin-bottom:0.3rem;padding-top:0.8rem;'>"
+        "<img src='data:image/avif;base64," + _logo_b64 + "'"
+        " style='width:80px;height:80px;object-fit:contain;border-radius:14px;'>"
+        "</div>"
+    ) if _logo_b64 else "<div style='font-size:2.5rem;text-align:center;padding-top:0.8rem;'>🏥</div>"
 
     st.markdown(f"""
     <div style='padding:0 0 0.5rem 0;'>
@@ -1991,9 +2078,6 @@ with st.sidebar:
         padding: 0.5rem !important; margin-bottom: 0.5rem !important;
         box-shadow: 0 3px 10px rgba(59,130,246,0.4) !important;
     }
-    div[data-testid="stSidebar"] .home-btn .stButton > button:hover {
-        background: linear-gradient(135deg,#2563eb,#1e40af) !important;
-    }
     div[data-testid="stSidebar"] .nav-btn .stButton > button {
         background: rgba(255,255,255,0.05) !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
@@ -2001,7 +2085,7 @@ with st.sidebar:
         font-size: 0.82rem !important; font-weight: 500 !important;
         text-align: left !important; justify-content: flex-start !important;
         width: 100% !important; padding: 0.45rem 0.7rem !important;
-        margin-bottom: 0.2rem !important; transition: all 0.15s !important;
+        margin-bottom: 0.2rem !important;
     }
     div[data-testid="stSidebar"] .nav-btn .stButton > button:hover {
         background: rgba(59,130,246,0.2) !important;
@@ -2020,9 +2104,6 @@ with st.sidebar:
         font-size: 0.82rem !important; font-weight: 600 !important;
         width: 100% !important; padding: 0.45rem 0.7rem !important;
         margin-bottom: 0.2rem !important;
-    }
-    div[data-testid="stSidebar"] .admin-btn .stButton > button:hover {
-        background: rgba(245,158,11,0.28) !important;
     }
     div[data-testid="stSidebar"] .admin-btn-active .stButton > button {
         background: rgba(245,158,11,0.3) !important;
@@ -2057,10 +2138,10 @@ with st.sidebar:
         ("🔬", "Future Glucose Prediction", "Regression ML"),
         ("🧪", "Lab Report Analysis",       "OCR + Gemini"),
         ("💬", "Medical Chatbot",           "RAG + FAISS"),
-        ("🏥", "Symptom Checker",           "Gemini AI"),
-        ("📊", "BMI & Health Score",        "Health Grade"),
-        ("🍎", "Diet Recommender",          "7-Day Meal"),
-        ("💊", "Medication Info",           "Drug Info"),
+        ("🏥", "Symptom Checker",           "Groq llama3"),
+        ("📊", "BMI & Health Score",        "Groq llama3"),
+        ("🍎", "Diet Recommender",          "Groq llama3"),
+        ("💊", "Medication Info",           "Groq llama3"),
         ("📈", "Model Insights",            "SHAP + Metrics"),
     ]
 
@@ -2099,12 +2180,12 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# READ ACTIVE MENU
+# MENU
 # ─────────────────────────────────────────────────────────────────────────────
 menu = st.session_state.get("menu", "About")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# APP HEADER
+# HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 hcol1, hcol2 = st.columns([1, 9])
 with hcol1:
@@ -2123,19 +2204,19 @@ with hcol2:
 st.markdown("<hr style='border-color:#e2e8f0;margin:0 0 1.5rem 0;'>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FEATURE PAGE IMPORTS
+# IMPORTS
 # ─────────────────────────────────────────────────────────────────────────────
-from disease_risk      import show_disease_risk
-from glucose_pred      import show_glucose_prediction
-from lab_report        import show_lab_report
-from chatbot_page      import show_chatbot
-from progress_page     import show_progress
-from symptom_checker   import show_symptom_checker
-from bmi_calculator    import show_bmi_calculator
-from diet_recommender  import show_diet_recommender
-from medication_info   import show_medication_info
-from model_insights    import show_model_insights
-from admin_panel       import show_admin_panel
+from disease_risk    import show_disease_risk
+from glucose_pred    import show_glucose_prediction
+from lab_report      import show_lab_report
+from chatbot_page    import show_chatbot
+from progress_page   import show_progress
+from symptom_checker import show_symptom_checker
+from bmi_calculator  import show_bmi_calculator
+from diet_recommender import show_diet_recommender
+from medication_info import show_medication_info
+from model_insights  import show_model_insights
+from admin_panel     import show_admin_panel
 
 # =============================================================================
 # ROUTING
@@ -2144,78 +2225,53 @@ if menu == "About":
     if os.path.exists("assets/robot_hand.jpg"):
         with open("assets/robot_hand.jpg", "rb") as f:
             img_b64 = base64.b64encode(f.read()).decode()
-        hero_html = (
+        st.markdown(
             "<div style='position:relative;border-radius:20px;overflow:hidden;"
             "margin-bottom:2rem;box-shadow:0 8px 40px rgba(0,0,0,0.25);'>"
             "<img src='data:image/jpeg;base64," + img_b64 + "'"
-            " style='width:100%;height:320px;object-fit:cover;"
-            "object-position:center;display:block;"
-            "filter:blur(2px) brightness(0.5);transform:scale(1.05);'>"
+            " style='width:100%;height:320px;object-fit:cover;object-position:center;"
+            "display:block;filter:blur(2px) brightness(0.5);transform:scale(1.05);'>"
             "<div style='position:absolute;inset:0;"
-            "background:linear-gradient(120deg,"
-            "rgba(10,20,50,0.6) 0%,rgba(15,40,80,0.45) 55%,rgba(10,20,50,0.4) 100%);'>"
-            "</div>"
+            "background:linear-gradient(120deg,rgba(10,20,50,0.6),rgba(10,20,50,0.4));'></div>"
             "<div style='position:absolute;inset:0;display:flex;flex-direction:column;"
             "justify-content:flex-end;padding:2rem 3rem;'>"
-            "<p style='color:#bfdbfe;font-size:1.1rem;margin:0 0 1rem 0;font-weight:500;"
-            "letter-spacing:0.02em;text-shadow:0 1px 8px rgba(0,0,0,0.8);'>"
+            "<p style='color:#bfdbfe;font-size:1.1rem;margin:0 0 1rem 0;font-weight:500;'>"
             "AI-Powered Smart Healthcare Assistant</p>"
             "<div style='display:flex;gap:0.6rem;flex-wrap:wrap;'>"
-            "<span style='background:rgba(59,130,246,0.35);border:1px solid rgba(59,130,246,0.6);"
-            "color:#bfdbfe;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>🩺 Disease Risk</span>"
-            "<span style='background:rgba(16,185,129,0.3);border:1px solid rgba(16,185,129,0.5);"
-            "color:#a7f3d0;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>🔬 Glucose Prediction</span>"
-            "<span style='background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.5);"
-            "color:#ddd6fe;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>🧪 Lab Analysis</span>"
-            "<span style='background:rgba(245,158,11,0.3);border:1px solid rgba(245,158,11,0.5);"
-            "color:#fde68a;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>💬 AI Chatbot</span>"
-            "<span style='background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);"
-            "color:#fca5a5;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>📅 Progress Tracker</span>"
-            "<span style='background:rgba(59,130,246,0.35);border:1px solid rgba(59,130,246,0.6);"
-            "color:#bfdbfe;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>🏥 Symptom Checker</span>"
-            "<span style='background:rgba(16,185,129,0.3);border:1px solid rgba(16,185,129,0.5);"
-            "color:#a7f3d0;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>📊 BMI & Health Score</span>"
-            "<span style='background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.5);"
-            "color:#ddd6fe;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>🍎 Diet Recommender</span>"
-            "<span style='background:rgba(245,158,11,0.3);border:1px solid rgba(245,158,11,0.5);"
-            "color:#fde68a;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>💊 Medication Info</span>"
-            "<span style='background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);"
-            "color:#fca5a5;border-radius:20px;padding:0.25rem 0.9rem;"
-            "font-size:0.8rem;font-weight:600;'>📈 Model Insights</span>"
-            "</div></div></div>"
+            "<span style='background:rgba(59,130,246,0.35);border:1px solid rgba(59,130,246,0.6);color:#bfdbfe;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>🩺 Disease Risk</span>"
+            "<span style='background:rgba(16,185,129,0.3);border:1px solid rgba(16,185,129,0.5);color:#a7f3d0;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>🔬 Glucose Prediction</span>"
+            "<span style='background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.5);color:#ddd6fe;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>🧪 Lab Analysis</span>"
+            "<span style='background:rgba(245,158,11,0.3);border:1px solid rgba(245,158,11,0.5);color:#fde68a;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>💬 AI Chatbot</span>"
+            "<span style='background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);color:#fca5a5;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>📅 Progress Tracker</span>"
+            "<span style='background:rgba(59,130,246,0.35);border:1px solid rgba(59,130,246,0.6);color:#bfdbfe;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>🏥 Symptom Checker</span>"
+            "<span style='background:rgba(16,185,129,0.3);border:1px solid rgba(16,185,129,0.5);color:#a7f3d0;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>📊 BMI & Health Score</span>"
+            "<span style='background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.5);color:#ddd6fe;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>🍎 Diet Recommender</span>"
+            "<span style='background:rgba(245,158,11,0.3);border:1px solid rgba(245,158,11,0.5);color:#fde68a;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>💊 Medication Info</span>"
+            "<span style='background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);color:#fca5a5;border-radius:20px;padding:0.25rem 0.9rem;font-size:0.8rem;font-weight:600;'>📈 Model Insights</span>"
+            "</div></div></div>",
+            unsafe_allow_html=True
         )
-        st.markdown(hero_html, unsafe_allow_html=True)
 
     st.markdown("## 👋 About MediAI Connect")
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown("""
-        **MediAI Connect** is an AI-powered healthcare assistant that combines
-        machine learning, deep learning, and Gemini AI to help users understand
-        and manage their health comprehensively.
+        **MediAI Connect** is an AI-powered healthcare assistant combining
+        machine learning, deep learning, Gemini AI and Groq LLaMA.
 
         **Core ML Features:**
-        - 🩺 Predicts risk for Diabetes, Hypertension, Cardiovascular & Kidney disease
-        - 🔬 Forecasts future glucose levels with age-trend graphs
-        - 🧪 Analyses lab reports using OCR + Gemini AI
-        - 💬 Answers medical questions using a RAG-powered chatbot
-        - 📅 Tracks your health progress over time with trend graphs
-        - 📈 Explains model predictions with Feature Importance
+        - 🩺 Disease risk prediction (Diabetes, Hypertension, Cardiovascular, Kidney)
+        - 🔬 Future glucose forecasting with trend charts
+        - 🧪 Lab report analysis via OCR + Gemini AI
+        - 💬 Medical Q&A via RAG-powered chatbot
+        - 📅 Health progress tracking over time
+        - 📈 Model explainability with Feature Importance
 
-        **New Health Tools:**
-        - 🏥 Symptom Checker powered by Gemini AI
-        - 📊 BMI & Health Score with A–F grading
-        - 🍎 Personalised 7-day Diet & Meal Planner
-        - 💊 Medication Information & Reminder Scheduler
+        **Groq-Powered Tools (llama-3.1-8b-instant):**
+        - 🏥 Symptom Checker
+        - 📊 BMI & Health Score
+        - 🍎 Personalised 7-day Diet Planner
+        - 💊 Medication Information
         """)
     with col_b:
         st.markdown("""
@@ -2223,13 +2279,12 @@ if menu == "About":
 
         | Module | Technology |
         |---|---|
-        | Disease Risk | XGBoost + MLP Neural Net |
-        | Glucose Forecast | LinearReg + MLP Regressor |
-        | AI Summary | Gemini 2.5 Flash (dual-key) |
-        | Lab OCR | Tesseract + PIL |
+        | Disease Risk | XGBoost + MLP |
+        | AI Summary / Lab | Gemini 2.5 Flash (dual-key) |
+        | Symptom / BMI / Diet / Med | Groq llama-3.1-8b (dual-key) |
         | Chatbot | RAG + FAISS + LangChain |
-        | Progress | JSON longitudinal storage |
-        | Auth | bcrypt password hashing |
+        | Auth | bcrypt hashing |
+        | API Monitoring | Admin Panel dashboard |
 
         **Dataset:** 1,700 clinical records, 9 features, 4 disease targets
         """)
@@ -2255,7 +2310,7 @@ elif menu == "Medical Chatbot":
     show_chatbot(
         username, _init_chat_state, _new_chat, _get_active_session,
         _auto_title, _delete_chat, _save_user_history, _call_rag,
-        show_loader
+        show_loader, MAX_CHAT_SESSIONS,
     )
 
 elif menu == "Health Progress Tracker":
@@ -2263,13 +2318,13 @@ elif menu == "Health Progress Tracker":
 
 elif menu == "Symptom Checker":
     st.session_state["_sym_user"] = username
-    show_symptom_checker(show_loader)
+    show_symptom_checker(show_loader, groq_generate=groq_generate)
 
 elif menu == "BMI & Health Score":
-    show_bmi_calculator(show_loader)
+    show_bmi_calculator(show_loader, groq_generate=groq_generate)
 
 elif menu == "Diet Recommender":
-    show_diet_recommender(show_loader, username=username)
+    show_diet_recommender(show_loader, username=username, groq_generate=groq_generate)
 
 elif menu == "Medication Info":
     show_medication_info(show_loader, username=username)
@@ -2277,7 +2332,6 @@ elif menu == "Medication Info":
 elif menu == "Model Insights":
     if role != "admin":
         st.error("🚫 Model Insights is only available to administrators.")
-        st.info("Please contact your admin if you need access to model analytics.")
     else:
         @st.cache_resource
         def _load_insight_models():
@@ -2292,7 +2346,10 @@ elif menu == "Model Insights":
 
 elif menu == "Admin Panel":
     if role != "admin":
-        st.error("🚫 Access denied. This area is restricted to administrators only.")
-        st.info("Please contact your system administrator if you need access.")
+        st.error("🚫 Access denied.")
     else:
-        show_admin_panel()
+        # Pass actual key counts so limits are calculated correctly
+        show_admin_panel(
+            num_gemini_keys=len(_API_KEYS),
+            num_groq_keys=len(_GROQ_KEYS)
+        )

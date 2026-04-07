@@ -95,17 +95,9 @@ Common doses, timing, with/without food. (Do NOT prescribe — general info only
 ## ⚠️ Common Side Effects
 List with frequency (common/uncommon/rare).
 
-## 🚨 Serious Side Effects
-Symptoms requiring immediate medical attention.
-
-## 🔄 Drug Interactions
-Important interactions to be aware of.
 
 ## 🚫 Precautions & Contraindications
 Who should NOT take this, when to be careful.
-
-## 🗄️ Storage
-How to store properly.
 
 ## ❓ Patient FAQs
 2-3 common questions patients ask about this drug.

@@ -16,3 +16,8 @@ faiss-cpu
 sentence-transformers
 shap
 fpdf2
+groq
+pytorch-tabnet
+reportlab
+python-dotenv
+bcrypt

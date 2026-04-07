@@ -1,32 +1,39 @@
 
+
+
 # # disease_risk.py
 # """
-# Disease Risk Prediction — with:
-#   • Updated 9-feature input form (Age, BMI, Cholesterol, BP, Glucose,
-#     Insulin, Gender, Smoking, Physical Activity)
-#   • Inline mini progress tracker (latest 3 entries)
-#   • "Who is this for?" option (Myself / Another Patient)
-#   • Temporary Check vs Track Progress mode
-#   • AI Health Summary (English only)
-#   • Medicine Suggestions via Gemini
-#   • AI Follow-up Questions via Gemini
-#   • PDF download
+# Disease Risk Prediction.
+# Accepts gemini_generate from app.py so all Gemini calls automatically
+# use the dual-key fallback (primary key → secondary key on failure).
 # """
 # import streamlit as st
 # import numpy as np
 # import pandas as pd
-# import google.generativeai as genai
 # from database import log_activity
+
+
+# # ─────────────────────────────────────────────────────────────────────────────
+# # PATIENT ID HELPERS
+# # ─────────────────────────────────────────────────────────────────────────────
+# def _make_patient_key(owner: str, patient_name: str) -> str:
+#     """Namespace a patient file under the logged-in user to avoid collisions."""
+#     safe = patient_name.strip().replace(" ", "_")
+#     return f"{owner}__{safe}"
+
+# def _display_name(patient_key: str) -> str:
+#     if "__" in patient_key:
+#         return patient_key.split("__", 1)[1].replace("_", " ")
+#     return patient_key
 
 
 # # ─────────────────────────────────────────────────────────────────────────────
 # # MINI PROGRESS PANEL
 # # ─────────────────────────────────────────────────────────────────────────────
-# def _mini_progress(patient_id: str, load_progress):
-#     history = load_progress(patient_id)
+# def _mini_progress(patient_key: str, load_progress):
+#     history = load_progress(patient_key)
 #     if not history or len(history) < 2:
 #         return
-
 #     df = pd.DataFrame(history).tail(3)
 #     st.markdown("#### 📅 Recent Progress")
 #     for _, row in df.iterrows():
@@ -42,10 +49,10 @@
 #             f"border-radius:10px;padding:0.5rem 0.8rem;margin-bottom:0.4rem;"
 #             f"font-size:0.82rem;color:#334155;'>"
 #             f"<b>{row.get('date','')}</b> &nbsp; "
-#             f"D:{row.get('diabetes',0):.0f}% &nbsp;"
-#             f"H:{row.get('hypertension',0):.0f}% &nbsp;"
-#             f"C:{row.get('cardiovascular',0):.0f}% &nbsp;"
-#             f"K:{row.get('kidney',0):.0f}% &nbsp;"
+#             f"D:{row.get('diabetes',0):.0f}% "
+#             f"H:{row.get('hypertension',0):.0f}% "
+#             f"C:{row.get('cardiovascular',0):.0f}% "
+#             f"K:{row.get('kidney',0):.0f}% "
 #             f"<span style='background:{badge_color};color:{text_color};"
 #             f"border-radius:6px;padding:0.1rem 0.5rem;font-weight:600;'>"
 #             f"{badge_text}</span></div>",
@@ -60,7 +67,9 @@
 # def show_disease_risk(
 #     scaler, diabetes_model, hypertension_model, cardio_model, kidney_model,
 #     username, show_loader, generate_ai_health_summary,
-#     create_disease_pdf, save_prediction, load_progress=None
+#     create_disease_pdf, save_prediction,
+#     load_progress=None,
+#     gemini_generate=None,     # dual-key wrapper passed from app.py
 # ):
 #     st.markdown("## 🩺 Disease Risk Prediction")
 
@@ -73,15 +82,16 @@
 #         key="risk_who_radio",
 #     )
 
-#     patient_id    = username
+#     patient_key   = username
+#     display_name  = username
 #     track_default = True
 
 #     if who == "Another Patient":
 #         col_name, col_track = st.columns([2, 1])
 #         with col_name:
-#             patient_id = st.text_input(
+#             raw_name = st.text_input(
 #                 "Patient Name / ID",
-#                 placeholder="e.g. John_Doe or patient_001",
+#                 placeholder="e.g. John Doe or patient_001",
 #                 key="risk_other_patient_name",
 #             ).strip()
 #         with col_track:
@@ -91,9 +101,12 @@
 #                 value=False,
 #                 key="risk_other_track",
 #             )
-#         if not patient_id:
+#         if not raw_name:
 #             st.warning("⚠️ Please enter a patient name / ID to continue.")
 #             return
+#         patient_key  = _make_patient_key(username, raw_name)
+#         display_name = raw_name
+#         st.caption(f"📁 Saved under your account as `{patient_key}` — only visible to you.")
 #     else:
 #         track_default = st.checkbox(
 #             "💾 Save this prediction to my progress tracker",
@@ -126,22 +139,17 @@
 #         submitted = st.form_submit_button("🔍 Predict Disease Risk", use_container_width=True)
 
 #     if not submitted:
-#         if who == "Myself" and load_progress:
-#             _mini_progress(username, load_progress)
+#         if load_progress:
+#             _mini_progress(patient_key, load_progress)
 #         return
 
-#     # ── Encode categoricals ───────────────────────────────────────────────
+#     # ── Encode ────────────────────────────────────────────────────────────
 #     gender_enc   = 1 if gender == "Male" else 0
 #     smoking_enc  = {"Never": 0, "Former": 1, "Current": 2}[smoking]
 #     activity_enc = {"Low": 0, "Moderate": 1, "High": 2}[activity]
 
-#     # Feature order must match training:
-#     # Age, BMI, Cholesterol, Blood_pressure, Gender,
-#     # Glucose_level, Smoking_status, Insulin, Physical_activity
 #     features = np.array([[
-#         age, bmi, chol, bp,
-#         gender_enc, glucose,
-#         smoking_enc, insulin, activity_enc
+#         age, bmi, chol, bp, gender_enc, glucose, smoking_enc, insulin, activity_enc
 #     ]])
 
 #     try:
@@ -165,7 +173,7 @@
 #     loader_ph.empty()
 
 #     # ── Results grid ──────────────────────────────────────────────────────
-#     st.markdown(f"### 📊 Results — Patient: **{patient_id}**")
+#     st.markdown(f"### 📊 Results — Patient: **{display_name}**")
 
 #     def _risk_badge(pct):
 #         if pct >= 70: return "🔴 High Risk"
@@ -182,18 +190,27 @@
 #         rc4.metric("🫘 Kidney Disease", f"{k_prob*100:.1f}%", _risk_badge(k_prob*100))
 #     with prog_col:
 #         if load_progress:
-#             _mini_progress(patient_id, load_progress)
+#             _mini_progress(patient_key, load_progress)
 
-#     # ── Save prediction ───────────────────────────────────────────────────
+#     # ── Save ──────────────────────────────────────────────────────────────
 #     if track_default:
-#         save_prediction(patient_id, age, bmi, glucose, d_prob, h_prob, c_prob, k_prob)
-#         st.success(f"✅ Prediction saved for **{patient_id}**'s progress tracker.")
-#         log_activity(username, "Prediction Saved", f"patient={patient_id}")
+#         save_prediction(patient_key, age, bmi, glucose, d_prob, h_prob, c_prob, k_prob)
+#         st.success(f"✅ Prediction saved for **{display_name}**.")
+#         log_activity(username, "Prediction Saved", f"patient_key={patient_key}")
 #     else:
-#         st.info("ℹ️ This was a **temporary check** — prediction not saved.")
-#         log_activity(username, "Temporary Prediction", f"patient={patient_id}")
+#         st.info("ℹ️ Temporary check — prediction not saved.")
+#         log_activity(username, "Temporary Prediction", f"patient_key={patient_key}")
 
 #     st.markdown("<hr style='border-color:#e2e8f0;margin:1rem 0;'>", unsafe_allow_html=True)
+
+#     # ── Decide which generate function to use ─────────────────────────────
+#     # If gemini_generate was passed (dual-key wrapper), use it.
+#     # Otherwise fall back to the generate_ai_health_summary passed in.
+#     def _gen(prompt: str) -> str:
+#         if gemini_generate:
+#             return gemini_generate(prompt)
+#         return generate_ai_health_summary.__wrapped__(prompt) if hasattr(
+#             generate_ai_health_summary, "__wrapped__") else str(prompt)
 
 #     # ── AI Health Summary ─────────────────────────────────────────────────
 #     loader_ai = st.empty()
@@ -211,35 +228,26 @@
 
 #     # ── Medicine Suggestions ──────────────────────────────────────────────
 #     st.markdown("### 💊 Suggested Medicines & Treatments")
-#     st.caption("⚠️ These are general suggestions only. Always consult a doctor before taking any medication.")
+#     st.caption("⚠️ General suggestions only. Always consult a doctor before taking any medication.")
 
 #     loader_med = st.empty()
 #     show_loader(loader_med, "Generating medicine suggestions…")
-#     try:
-#         gemini_med = genai.GenerativeModel("gemini-2.5-flash")
-#         med_prompt = f"""You are a medical assistant providing general educational information.
+#     med_prompt = f"""You are a medical assistant providing general educational information.
 
-# Patient profile: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
-# Cholesterol {chol} mg/dL, Blood Pressure {bp} mmHg, Insulin {insulin},
-# Smoking: {smoking}, Physical Activity: {activity}
+# Patient: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
+# Cholesterol {chol} mg/dL, BP {bp} mmHg, Insulin {insulin},
+# Smoking: {smoking}, Activity: {activity}
 
-# Predicted disease risks:
-# - Diabetes: {d_prob*100:.1f}%
-# - Hypertension: {h_prob*100:.1f}%
-# - Cardiovascular: {c_prob*100:.1f}%
-# - Kidney Disease: {k_prob*100:.1f}%
+# Predicted risks — Diabetes: {d_prob*100:.1f}%, Hypertension: {h_prob*100:.1f}%,
+# Cardiovascular: {c_prob*100:.1f}%, Kidney: {k_prob*100:.1f}%
 
-# For each disease where risk is above 30%, provide:
-# 1. Common medications typically prescribed (generic names only)
-# 2. Typical lifestyle treatments (diet, exercise)
+# For each disease where risk > 30%:
+# 1. Common medications (generic names only, no doses)
+# 2. Lifestyle treatments
 # 3. When to see a doctor urgently
 
-# Format clearly with disease headings.
-# IMPORTANT: Add disclaimer that this is general information only and not a prescription.
-# Do NOT recommend specific doses. Keep it brief and clear."""
-#         med_text = gemini_med.generate_content(med_prompt).text.strip()
-#     except Exception as e:
-#         med_text = f"Could not generate suggestions: {e}"
+# Use clear disease headings. End with a disclaimer that this is not a prescription."""
+#     med_text = _gen(med_prompt)
 #     loader_med.empty()
 #     st.markdown(med_text)
 
@@ -249,23 +257,19 @@
 
 #     loader_fq = st.empty()
 #     show_loader(loader_fq, "Generating follow-up questions…")
-#     try:
-#         gemini_fq = genai.GenerativeModel("gemini-2.5-flash")
-#         fq_prompt = f"""You are a doctor reviewing a patient's health prediction results.
+#     fq_prompt = f"""You are a doctor reviewing a patient's health prediction results.
 
-# Patient Details: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
-# Cholesterol {chol} mg/dL, Blood Pressure {bp} mmHg, Insulin {insulin},
-# Smoking: {smoking}, Physical Activity: {activity}
+# Patient: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
+# Cholesterol {chol} mg/dL, BP {bp} mmHg, Insulin {insulin},
+# Smoking: {smoking}, Activity: {activity}
 
-# Predicted Risks: Diabetes {d_prob*100:.1f}%, Hypertension {h_prob*100:.1f}%,
+# Risks: Diabetes {d_prob*100:.1f}%, Hypertension {h_prob*100:.1f}%,
 # Cardiovascular {c_prob*100:.1f}%, Kidney {k_prob*100:.1f}%
 
-# Generate 5 smart follow-up questions a doctor would ask this patient
-# to better understand their condition. Make them specific to the risks shown.
-# Format: numbered list, one question per line, no extra explanation."""
-#         follow_up = gemini_fq.generate_content(fq_prompt).text.strip()
-#     except Exception as e:
-#         follow_up = f"Could not generate questions: {e}"
+# Generate 5 smart follow-up questions a doctor would ask.
+# Make them specific to the risks shown.
+# Format: numbered list, one per line, no extra explanation."""
+#     follow_up = _gen(fq_prompt)
 #     loader_fq.empty()
 #     st.markdown(follow_up)
 
@@ -274,24 +278,26 @@
 #     try:
 #         pdf_bytes = create_disease_pdf(
 #             age, bmi, glucose,
-#             d_prob * 100, h_prob * 100, c_prob * 100, k_prob * 100,
+#             d_prob*100, h_prob*100, c_prob*100, k_prob*100,
 #             summary,
 #         )
 #         st.download_button(
 #             "📥 Download Health Report (PDF)",
 #             pdf_bytes,
-#             f"risk_report_{patient_id}.pdf",
+#             f"risk_report_{display_name.replace(' ','_')}.pdf",
 #             "application/pdf",
 #         )
 #     except Exception as e:
 #         st.warning(f"PDF generation failed: {e}")
 
 
+
+
 # disease_risk.py
 """
 Disease Risk Prediction.
-Accepts gemini_generate from app.py so all Gemini calls automatically
-use the dual-key fallback (primary key → secondary key on failure).
+FIX: All 3 AI sections (Summary + Medicine + Follow-up) now use a SINGLE
+     Gemini API call instead of 3 separate calls — saves 2/3 of quota usage.
 """
 import streamlit as st
 import numpy as np
@@ -303,7 +309,6 @@ from database import log_activity
 # PATIENT ID HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 def _make_patient_key(owner: str, patient_name: str) -> str:
-    """Namespace a patient file under the logged-in user to avoid collisions."""
     safe = patient_name.strip().replace(" ", "_")
     return f"{owner}__{safe}"
 
@@ -348,6 +353,67 @@ def _mini_progress(patient_key: str, load_progress):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SINGLE COMBINED AI PROMPT  ← KEY CHANGE
+# One call returns all 3 sections: Summary + Medicine + Follow-up Questions
+# ─────────────────────────────────────────────────────────────────────────────
+def _build_combined_prompt(age, bmi, chol, bp, glucose, insulin,
+                            smoking, activity,
+                            d_prob, h_prob, c_prob, k_prob) -> str:
+    return f"""You are a medical assistant. A patient has just received their disease risk scores.
+Provide a complete health report in exactly 3 sections using these headings.
+
+PATIENT: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
+Cholesterol {chol} mg/dL, BP {bp} mmHg, Insulin {insulin},
+Smoking: {smoking}, Activity: {activity}
+
+RISK SCORES: Diabetes {d_prob*100:.1f}% | Hypertension {h_prob*100:.1f}% | Cardiovascular {c_prob*100:.1f}% | Kidney {k_prob*100:.1f}%
+
+---
+### 🤖 AI Health Summary
+Briefly explain each risk in simple language. Identify the most dangerous one. Give 3 lifestyle tips. Keep it short.
+
+---
+### 💊 Suggested Medicines & Treatments
+Only for diseases with risk above 30%. For each:
+- Common generic medications (no doses)
+- Lifestyle treatment
+- When to see a doctor urgently
+End with: ⚠️ This is general information only, not a prescription.
+
+---
+### 🧑‍⚕️ Doctor Follow-up Questions
+List exactly 5 numbered questions a doctor would ask this patient based on their specific risks. One per line, no extra explanation.
+"""
+
+
+def _parse_combined_response(full_text: str) -> tuple:
+    """
+    Splits the single AI response into 3 parts.
+    Returns (summary, medicine, followup) as strings.
+    """
+    summary   = ""
+    medicine  = ""
+    followup  = ""
+
+    # Split on the section headings
+    parts = full_text.split("###")
+    for part in parts:
+        p = part.strip()
+        if p.startswith("🤖 AI Health Summary"):
+            summary = p[len("🤖 AI Health Summary"):].strip()
+        elif p.startswith("💊 Suggested Medicines"):
+            medicine = p[len("💊 Suggested Medicines & Treatments"):].strip()
+        elif p.startswith("🧑‍⚕️ Doctor Follow-up"):
+            followup = p[len("🧑‍⚕️ Doctor Follow-up Questions"):].strip()
+
+    # Fallback: if parsing fails just show full text in summary
+    if not summary and not medicine and not followup:
+        summary = full_text
+
+    return summary, medicine, followup
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
 def show_disease_risk(
@@ -355,7 +421,7 @@ def show_disease_risk(
     username, show_loader, generate_ai_health_summary,
     create_disease_pdf, save_prediction,
     load_progress=None,
-    gemini_generate=None,     # dual-key wrapper passed from app.py
+    gemini_generate=None,
 ):
     st.markdown("## 🩺 Disease Risk Prediction")
 
@@ -422,7 +488,7 @@ def show_disease_risk(
         smoking  = c8.selectbox("Smoking Status",    ["Never", "Former", "Current"], key="dis_smoking")
         activity = c9.selectbox("Physical Activity", ["Low", "Moderate", "High"],    key="dis_activity")
 
-        submitted = st.form_submit_button("🔍 Predict Disease Risk", use_container_width=True)
+        submitted = st.form_submit_button("🔍 Predict Disease Risk", width='stretch')
 
     if not submitted:
         if load_progress:
@@ -478,7 +544,7 @@ def show_disease_risk(
         if load_progress:
             _mini_progress(patient_key, load_progress)
 
-    # ── Save ──────────────────────────────────────────────────────────────
+    # ── Save prediction ───────────────────────────────────────────────────
     if track_default:
         save_prediction(patient_key, age, bmi, glucose, d_prob, h_prob, c_prob, k_prob)
         st.success(f"✅ Prediction saved for **{display_name}**.")
@@ -489,75 +555,49 @@ def show_disease_risk(
 
     st.markdown("<hr style='border-color:#e2e8f0;margin:1rem 0;'>", unsafe_allow_html=True)
 
-    # ── Decide which generate function to use ─────────────────────────────
-    # If gemini_generate was passed (dual-key wrapper), use it.
-    # Otherwise fall back to the generate_ai_health_summary passed in.
-    def _gen(prompt: str) -> str:
-        if gemini_generate:
-            return gemini_generate(prompt)
-        return generate_ai_health_summary.__wrapped__(prompt) if hasattr(
-            generate_ai_health_summary, "__wrapped__") else str(prompt)
-
-    # ── AI Health Summary ─────────────────────────────────────────────────
+    # ── SINGLE API CALL for all 3 AI sections ────────────────────────────
+    # Before: 3 separate calls = 3 quota units used
+    # Now:    1 combined call  = 1 quota unit used
+    # ─────────────────────────────────────────────────────────────────────
     loader_ai = st.empty()
-    show_loader(loader_ai, "Generating AI Health Summary…")
+    show_loader(loader_ai, "Generating AI health report… (1 call)")
+
+    combined_prompt = _build_combined_prompt(
+        age, bmi, chol, bp, glucose, insulin,
+        smoking, activity,
+        d_prob, h_prob, c_prob, k_prob
+    )
+
     try:
-        summary = generate_ai_health_summary(
-            age, bmi, glucose, d_prob, h_prob, c_prob, k_prob
-        )
+        if gemini_generate:
+            full_response = gemini_generate(combined_prompt)
+        else:
+            full_response = generate_ai_health_summary(
+                age, bmi, glucose, d_prob, h_prob, c_prob, k_prob
+            )
     except Exception as e:
-        summary = f"Could not generate summary: {e}"
+        full_response = f"### 🤖 AI Health Summary\nCould not generate report: {e}"
+
     loader_ai.empty()
 
+    # Parse the single response into 3 sections
+    summary, medicine, followup = _parse_combined_response(full_response)
+
+    # ── Display Section 1: AI Health Summary ─────────────────────────────
     st.markdown("### 🤖 AI Health Summary")
-    st.info(summary)
+    st.info(summary if summary else full_response)
 
-    # ── Medicine Suggestions ──────────────────────────────────────────────
-    st.markdown("### 💊 Suggested Medicines & Treatments")
-    st.caption("⚠️ General suggestions only. Always consult a doctor before taking any medication.")
+    # ── Display Section 2: Medicine Suggestions ───────────────────────────
+    if medicine:
+        st.markdown("### 💊 Suggested Medicines & Treatments")
+        st.caption("⚠️ General suggestions only. Always consult a doctor before taking any medication.")
+        st.markdown(medicine)
 
-    loader_med = st.empty()
-    show_loader(loader_med, "Generating medicine suggestions…")
-    med_prompt = f"""You are a medical assistant providing general educational information.
-
-Patient: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
-Cholesterol {chol} mg/dL, BP {bp} mmHg, Insulin {insulin},
-Smoking: {smoking}, Activity: {activity}
-
-Predicted risks — Diabetes: {d_prob*100:.1f}%, Hypertension: {h_prob*100:.1f}%,
-Cardiovascular: {c_prob*100:.1f}%, Kidney: {k_prob*100:.1f}%
-
-For each disease where risk > 30%:
-1. Common medications (generic names only, no doses)
-2. Lifestyle treatments
-3. When to see a doctor urgently
-
-Use clear disease headings. End with a disclaimer that this is not a prescription."""
-    med_text = _gen(med_prompt)
-    loader_med.empty()
-    st.markdown(med_text)
-
-    # ── AI Follow-up Questions ────────────────────────────────────────────
-    st.markdown("### 🧑‍⚕️ AI Follow-up Questions")
-    st.caption("Questions a doctor might ask based on your results:")
-
-    loader_fq = st.empty()
-    show_loader(loader_fq, "Generating follow-up questions…")
-    fq_prompt = f"""You are a doctor reviewing a patient's health prediction results.
-
-Patient: Age {age}, BMI {bmi:.1f}, Glucose {glucose} mg/dL,
-Cholesterol {chol} mg/dL, BP {bp} mmHg, Insulin {insulin},
-Smoking: {smoking}, Activity: {activity}
-
-Risks: Diabetes {d_prob*100:.1f}%, Hypertension {h_prob*100:.1f}%,
-Cardiovascular {c_prob*100:.1f}%, Kidney {k_prob*100:.1f}%
-
-Generate 5 smart follow-up questions a doctor would ask.
-Make them specific to the risks shown.
-Format: numbered list, one per line, no extra explanation."""
-    follow_up = _gen(fq_prompt)
-    loader_fq.empty()
-    st.markdown(follow_up)
+    # ── Display Section 3: Follow-up Questions ────────────────────────────
+    if followup:
+        st.markdown("### 🧑‍⚕️ AI Follow-up Questions")
+        st.caption("Questions a doctor might ask based on your results:")
+        st.markdown(followup)
 
     # ── PDF download ──────────────────────────────────────────────────────
     st.markdown("<hr style='border-color:#e2e8f0;margin:1rem 0;'>", unsafe_allow_html=True)
@@ -565,12 +605,12 @@ Format: numbered list, one per line, no extra explanation."""
         pdf_bytes = create_disease_pdf(
             age, bmi, glucose,
             d_prob*100, h_prob*100, c_prob*100, k_prob*100,
-            summary,
+            summary if summary else full_response,
         )
         st.download_button(
             "📥 Download Health Report (PDF)",
             pdf_bytes,
-            f"risk_report_{display_name.replace(' ','_')}.pdf",
+            f"risk_report_{display_name.replace(' ', '_')}.pdf",
             "application/pdf",
         )
     except Exception as e:
