@@ -1,23 +1,58 @@
+# streamlit
+# scikit-learn
+# xgboost
+# tensorflow
+# pandas
+# numpy
+# joblib
+# pytesseract
+# pillow
+# google-generativeai
+# deep-translator
+# langchain
+# langchain-community
+# langchain-google-genai
+# faiss-cpu
+# sentence-transformers
+# shap
+# fpdf2
+# groq
+# pytorch-tabnet
+# reportlab
+# python-dotenv
+# bcrypt
+
+
+
+# Web & UI
 streamlit
-scikit-learn
-xgboost
-tensorflow
-pandas
-numpy
-joblib
-pytesseract
 pillow
+
+# Core Data & ML (Optimized for CPU/Memory)
+numpy
+pandas
+scikit-learn
+joblib
+shap
+xgboost
+tensorflow-cpu
+pytorch-tabnet
+
+# AI & RAG (API Focused)
 google-generativeai
-deep-translator
+groq
 langchain
 langchain-community
 langchain-google-genai
+python-dotenv
+
+# Vector Search & Embeddings
 faiss-cpu
 sentence-transformers
-shap
+
+# Processing & Utilities
+pytesseract
+deep-translator
 fpdf2
-groq
-pytorch-tabnet
 reportlab
-python-dotenv
 bcrypt
