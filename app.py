@@ -1256,19 +1256,50 @@ if not _GROQ_KEYS:
 if _API_KEYS:
     genai.configure(api_key=_API_KEYS[0])
 
+# def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
+#                     feature: str = "general") -> str:
+#     """
+#     Gemini with automatic key fallback.
+#     Logs every call to api_usage_log.json for the admin dashboard.
+#     """
+#     last_error = None
+#     for i, key in enumerate(_API_KEYS):
+#         try:
+#             genai.configure(api_key=key)
+#             model  = genai.GenerativeModel(model_name)
+#             result = model.generate_content(prompt).text
+#             # Log success
+#             try:
+#                 from admin_panel import log_api_call
+#                 log_api_call("gemini", feature, True)
+#             except Exception:
+#                 pass
+#             return result
+#         except Exception as e:
+#             last_error = e
+#             if i < len(_API_KEYS) - 1:
+#                 print(f"⚠️ Gemini key {i+1} failed: {e}. Trying key {i+2}…")
+#             continue
+
+#     # All keys failed — log failure
+#     try:
+#         from admin_panel import log_api_call
+#         log_api_call("gemini", feature, False)
+#     except Exception:
+#         pass
+#     return f"⚠️ All Gemini API keys failed. Last error: {last_error}"
+from google import genai
+
 def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
                     feature: str = "general") -> str:
-    """
-    Gemini with automatic key fallback.
-    Logs every call to api_usage_log.json for the admin dashboard.
-    """
     last_error = None
     for i, key in enumerate(_API_KEYS):
         try:
-            genai.configure(api_key=key)
-            model  = genai.GenerativeModel(model_name)
-            result = model.generate_content(prompt).text
-            # Log success
+            client = genai.Client(api_key=key)
+            result = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            ).text
             try:
                 from admin_panel import log_api_call
                 log_api_call("gemini", feature, True)
@@ -1281,14 +1312,12 @@ def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
                 print(f"⚠️ Gemini key {i+1} failed: {e}. Trying key {i+2}…")
             continue
 
-    # All keys failed — log failure
     try:
         from admin_panel import log_api_call
         log_api_call("gemini", feature, False)
     except Exception:
         pass
     return f"⚠️ All Gemini API keys failed. Last error: {last_error}"
-
 
 def groq_generate(prompt: str, system: str = "You are a helpful assistant.",
                   model: str = "llama-3.1-8b-instant",
