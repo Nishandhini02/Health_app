@@ -58,3 +58,5 @@ reportlab
 bcrypt
 pypdf
 groq
+langchain-huggingface
+google-genai

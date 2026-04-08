@@ -1209,12 +1209,12 @@ import datetime
 import json
 import pytesseract
 from PIL import Image
-import google.generativeai as genai
+#import google.generativeai as genai
 from groq import Groq
 from dotenv import load_dotenv
 from auth import login_user, register_user, get_role
 from rag_chatbot import create_rag
-
+from google import genai
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 )

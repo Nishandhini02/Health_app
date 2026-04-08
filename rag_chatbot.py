@@ -88,11 +88,11 @@ import re
 import pickle
 
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+#from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
-
+from langchain_huggingface import HuggingFaceEmbeddings
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
