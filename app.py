@@ -1254,7 +1254,7 @@ if not _GROQ_KEYS:
 
 # Configure genai with first key on startup
 if _API_KEYS:
-    genai.configure(api_key=_API_KEYS[0])
+    genai.client(api_key=_API_KEYS[0])
 
 # def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
 #                     feature: str = "general") -> str:
