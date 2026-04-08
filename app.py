@@ -1209,7 +1209,7 @@ import datetime
 import json
 import pytesseract
 from PIL import Image
-import google.generativeai as genai
+#import google.generativeai as genai
 from groq import Groq
 from dotenv import load_dotenv
 from auth import login_user, register_user, get_role
@@ -1254,7 +1254,8 @@ if not _GROQ_KEYS:
 
 # Configure genai with first key on startup
 if _API_KEYS:
-    genai.client(api_key=_API_KEYS[0])
+    #genai.client(api_key=_API_KEYS[0])
+    pass
 
 # def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
 #                     feature: str = "general") -> str:
