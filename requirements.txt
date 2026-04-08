@@ -56,3 +56,5 @@ deep-translator
 fpdf2
 reportlab
 bcrypt
+pypdf
+groq
