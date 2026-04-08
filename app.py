@@ -1597,16 +1597,34 @@ div[data-testid="stVerticalBlock"]:has(.hist-box-anchor) .clear-btn .stButton > 
 # ─────────────────────────────────────────────────────────────────────────────
 # TESSERACT CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
-tempfile.tempdir = "D:/temp"
-if not os.path.exists("D:/temp"):
-    os.makedirs("D:/temp")
+# tempfile.tempdir = "D:/temp"
+# if not os.path.exists("D:/temp"):
+#     os.makedirs("D:/temp")
 
-pytesseract.pytesseract.tesseract_cmd = (
-    r"C:\Users\nishandhini.ravi\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
-)
-os.environ["TESSDATA_PREFIX"] = (
-    r"C:\Users\nishandhini.ravi\AppData\Local\Programs\Tesseract-OCR\tessdata"
-)
+# pytesseract.pytesseract.tesseract_cmd = (
+#     r"C:\Users\nishandhini.ravi\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+# )
+# os.environ["TESSDATA_PREFIX"] = (
+#     r"C:\Users\nishandhini.ravi\AppData\Local\Programs\Tesseract-OCR\tessdata"
+# )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TESSERACT CONFIG
+# ─────────────────────────────────────────────────────────────────────────────
+import platform
+
+if platform.system() == "Windows":
+    tempfile.tempdir = "D:/temp"
+    os.makedirs("D:/temp", exist_ok=True)
+    pytesseract.pytesseract.tesseract_cmd = (
+        r"C:\Users\nishandhini.ravi\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+    )
+    os.environ["TESSDATA_PREFIX"] = (
+        r"C:\Users\nishandhini.ravi\AppData\Local\Programs\Tesseract-OCR\tessdata"
+    )
+else:
+    # Linux (Render) — use system /tmp, tesseract found automatically in PATH
+    tempfile.tempdir = "/tmp"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ML MODEL LOADING
