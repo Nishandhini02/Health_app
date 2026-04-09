@@ -39,7 +39,7 @@ xgboost
 #pytorch-tabnet
 
 # AI & RAG (API Focused)
-google-generativeai
+#google-generativeai
 groq
 langchain
 langchain-community
@@ -55,7 +55,7 @@ pytesseract
 deep-translator
 fpdf2
 reportlab
-bcrypt
+#bcrypt
 pypdf
 langchain-huggingface
 google-genai
