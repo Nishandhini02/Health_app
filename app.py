@@ -1290,7 +1290,10 @@ if _API_KEYS:
 #         pass
 #     return f"⚠️ All Gemini API keys failed. Last error: {last_error}"
 from google import genai
-
+# Reduce memory — only load models when actually needed
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"   # suppress TF logs if TF somehow present
+os.environ["TOKENIZERS_PARALLELISM"] = "false"  # avoid warning from HuggingFace
 def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
                     feature: str = "general") -> str:
     last_error = None
@@ -1663,7 +1666,62 @@ else:
 def load_rag():
     return create_rag(_API_KEYS[0] if _API_KEYS else "")
 
+# def _pick_best_model(disease_key: str, disease_col: str):
+#     metrics_path = "models/model_metrics.json"
+#     model_file_map = {
+#         "LogisticRegression": f"models/{disease_col}_logreg.pkl",
+#         "RandomForest":       f"models/{disease_col}_rf.pkl",
+#         "XGBoost":            f"models/{disease_col}_xgb.pkl",
+#         "MLP_NeuralNetwork":  f"models/{disease_col}_mlp.pkl",
+#     }
+#     best_name = "XGBoost"
+#     best_acc  = 0.0
+#     if os.path.exists(metrics_path):
+#         try:
+#             with open(metrics_path, "r", encoding="utf-8") as f:
+#                 metrics = json.load(f)
+#             if disease_col in metrics:
+#                 for model_name, m in metrics[disease_col].items():
+#                     if model_name in model_file_map:
+#                         if m.get("accuracy", 0) > best_acc:
+#                             best_acc  = m["accuracy"]
+#                             best_name = model_name
+#         except Exception:
+#             pass
+#     model_path = model_file_map.get(best_name, f"models/{disease_col}_xgb.pkl")
+#     tf_path = f"models/{disease_col}_tf_mlp.keras"
+#     tn_path = f"models/{disease_col}_tabnet.zip"
+#     if os.path.exists(metrics_path):
+#         try:
+#             with open(metrics_path, "r", encoding="utf-8") as f:
+#                 metrics = json.load(f)
+#             if disease_col in metrics:
+#                 for model_name, m in metrics[disease_col].items():
+#                     if model_name == "TF_MLP" and os.path.exists(tf_path):
+#                         if m.get("accuracy", 0) > best_acc:
+#                             best_acc = m["accuracy"]; best_name = "TF_MLP"; model_path = tf_path
+#                     if model_name == "TabNet" and os.path.exists(tn_path):
+#                         if m.get("accuracy", 0) > best_acc:
+#                             best_acc = m["accuracy"]; best_name = "TabNet"; model_path = tn_path
+#         except Exception:
+#             pass
+#     try:
+#         if best_name == "TF_MLP":
+#             import tensorflow as tf
+#             model = tf.keras.models.load_model(model_path)
+#         elif best_name == "TabNet":
+#             from pytorch_tabnet.tab_model import TabNetClassifier
+#             model = TabNetClassifier(); model.load_model(tn_path)
+#         else:
+#             model = joblib.load(model_path)
+#         return model, best_name
+#     except Exception:
+#         return joblib.load(f"models/{disease_col}_xgb.pkl"), "XGBoost"
 def _pick_best_model(disease_key: str, disease_col: str):
+    """
+    Selects best model among XGBoost, RandomForest, LogisticRegression, MLP (sklearn).
+    TabNet and TF_MLP removed — too heavy for Render free tier (512MB RAM).
+    """
     metrics_path = "models/model_metrics.json"
     model_file_map = {
         "LogisticRegression": f"models/{disease_col}_logreg.pkl",
@@ -1686,31 +1744,8 @@ def _pick_best_model(disease_key: str, disease_col: str):
         except Exception:
             pass
     model_path = model_file_map.get(best_name, f"models/{disease_col}_xgb.pkl")
-    tf_path = f"models/{disease_col}_tf_mlp.keras"
-    tn_path = f"models/{disease_col}_tabnet.zip"
-    if os.path.exists(metrics_path):
-        try:
-            with open(metrics_path, "r", encoding="utf-8") as f:
-                metrics = json.load(f)
-            if disease_col in metrics:
-                for model_name, m in metrics[disease_col].items():
-                    if model_name == "TF_MLP" and os.path.exists(tf_path):
-                        if m.get("accuracy", 0) > best_acc:
-                            best_acc = m["accuracy"]; best_name = "TF_MLP"; model_path = tf_path
-                    if model_name == "TabNet" and os.path.exists(tn_path):
-                        if m.get("accuracy", 0) > best_acc:
-                            best_acc = m["accuracy"]; best_name = "TabNet"; model_path = tn_path
-        except Exception:
-            pass
     try:
-        if best_name == "TF_MLP":
-            import tensorflow as tf
-            model = tf.keras.models.load_model(model_path)
-        elif best_name == "TabNet":
-            from pytorch_tabnet.tab_model import TabNetClassifier
-            model = TabNetClassifier(); model.load_model(tn_path)
-        else:
-            model = joblib.load(model_path)
+        model = joblib.load(model_path)
         return model, best_name
     except Exception:
         return joblib.load(f"models/{disease_col}_xgb.pkl"), "XGBoost"

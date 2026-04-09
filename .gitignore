@@ -5,6 +5,7 @@ __pycache__/
 
 *.json
 *.db
+models/*.zip
 .venv/
 rag_venv/
 health_progress/
