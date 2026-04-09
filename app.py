@@ -2393,7 +2393,7 @@ elif menu == "Medical Chatbot":
     show_chatbot(
         username, _init_chat_state, _new_chat, _get_active_session,
         _auto_title, _delete_chat, _save_user_history, _call_rag,
-        show_loader, MAX_CHAT_SESSIONS,
+        show_loader
     )
 
 elif menu == "Health Progress Tracker":
