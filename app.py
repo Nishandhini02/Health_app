@@ -2231,7 +2231,7 @@ with st.sidebar:
     _current_menu = st.session_state.get("menu", "About")
 
     for icon, label, tech in _feature_list:
-        if label == "Model Insights" and role != "admin":
+        if label == "Model Insights" and role != "admin1":
             continue
         _is_active = _current_menu == label
         _cls = "nav-btn-active" if _is_active else "nav-btn"
@@ -2240,7 +2240,7 @@ with st.sidebar:
             st.session_state.menu = label; st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    if role == "admin1":
+    if role == "admin":
         st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
         st.markdown(
             "<div style='font-size:0.7rem;color:#475569;text-transform:uppercase;"
@@ -2428,7 +2428,7 @@ elif menu == "Model Insights":
         show_model_insights(_load_insight_models())
 
 elif menu == "Admin Panel":
-    if role != "admin1":
+    if role != "admin":
         st.error("🚫 Access denied.")
     else:
         # Pass actual key counts so limits are calculated correctly
