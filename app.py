@@ -2413,7 +2413,7 @@ elif menu == "Medication Info":
     show_medication_info(show_loader, username=username)
 
 elif menu == "Model Insights":
-    if role != "admin1":
+    if role != "admin":
         st.error("🚫 Model Insights is only available to administrators.")
     else:
         @st.cache_resource
