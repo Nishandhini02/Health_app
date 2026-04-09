@@ -21,7 +21,7 @@
 # # Command to run your app
 # CMD ["streamlit", "run", "app.py", "--server.port", "10000", "--server.address", "0.0.0.0"]
 # Dockerfile - CORRECTED
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 # Install system dependencies in one layer to save space
 RUN apt-get update && apt-get install -y \
