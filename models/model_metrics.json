@@ -1,0 +1,164 @@
+{
+  "Diabetes_Diagnosis": {
+    "LogisticRegression": {
+      "accuracy": 0.9618,
+      "f1": 0.964,
+      "precision": 0.9775,
+      "recall": 0.9508
+    },
+    "RandomForest": {
+      "accuracy": 0.9529,
+      "f1": 0.9556,
+      "precision": 0.9718,
+      "recall": 0.9399
+    },
+    "XGBoost": {
+      "accuracy": 0.9618,
+      "f1": 0.964,
+      "precision": 0.9775,
+      "recall": 0.9508
+    },
+    "MLP_NeuralNetwork": {
+      "accuracy": 0.9529,
+      "f1": 0.9551,
+      "precision": 0.9827,
+      "recall": 0.929
+    },
+    "TF_MLP": {
+      "accuracy": 0.9618,
+      "f1": 0.9642,
+      "precision": 0.9722,
+      "recall": 0.9563
+    },
+    "TabNet": {
+      "accuracy": 0.9088,
+      "f1": 0.9136,
+      "precision": 0.9318,
+      "recall": 0.8962
+    }
+  },
+  "hypertension": {
+    "LogisticRegression": {
+      "accuracy": 0.8206,
+      "f1": 0.6013,
+      "precision": 0.7667,
+      "recall": 0.4946
+    },
+    "RandomForest": {
+      "accuracy": 0.85,
+      "f1": 0.7052,
+      "precision": 0.7625,
+      "recall": 0.6559
+    },
+    "XGBoost": {
+      "accuracy": 0.8382,
+      "f1": 0.6927,
+      "precision": 0.7209,
+      "recall": 0.6667
+    },
+    "MLP_NeuralNetwork": {
+      "accuracy": 0.7971,
+      "f1": 0.5306,
+      "precision": 0.7222,
+      "recall": 0.4194
+    },
+    "TF_MLP": {
+      "accuracy": 0.8029,
+      "f1": 0.5732,
+      "precision": 0.7031,
+      "recall": 0.4839
+    },
+    "TabNet": {
+      "accuracy": 0.7794,
+      "f1": 0.4526,
+      "precision": 0.7045,
+      "recall": 0.3333
+    }
+  },
+  "cardiovascular": {
+    "LogisticRegression": {
+      "accuracy": 0.8265,
+      "f1": 0.7915,
+      "precision": 0.8421,
+      "recall": 0.7467
+    },
+    "RandomForest": {
+      "accuracy": 0.85,
+      "f1": 0.8223,
+      "precision": 0.8613,
+      "recall": 0.7867
+    },
+    "XGBoost": {
+      "accuracy": 0.85,
+      "f1": 0.8317,
+      "precision": 0.8235,
+      "recall": 0.84
+    },
+    "MLP_NeuralNetwork": {
+      "accuracy": 0.8382,
+      "f1": 0.807,
+      "precision": 0.8519,
+      "recall": 0.7667
+    },
+    "TF_MLP": {
+      "accuracy": 0.8206,
+      "f1": 0.7889,
+      "precision": 0.8201,
+      "recall": 0.76
+    },
+    "TabNet": {
+      "accuracy": 0.8176,
+      "f1": 0.7832,
+      "precision": 0.8235,
+      "recall": 0.7467
+    }
+  },
+  "kidney": {
+    "LogisticRegression": {
+      "accuracy": 0.8265,
+      "f1": 0.604,
+      "precision": 0.75,
+      "recall": 0.5056
+    },
+    "RandomForest": {
+      "accuracy": 0.8971,
+      "f1": 0.7799,
+      "precision": 0.8857,
+      "recall": 0.6966
+    },
+    "XGBoost": {
+      "accuracy": 0.9176,
+      "f1": 0.8353,
+      "precision": 0.8765,
+      "recall": 0.7978
+    },
+    "MLP_NeuralNetwork": {
+      "accuracy": 0.8235,
+      "f1": 0.5946,
+      "precision": 0.7458,
+      "recall": 0.4944
+    },
+    "TF_MLP": {
+      "accuracy": 0.85,
+      "f1": 0.6434,
+      "precision": 0.8519,
+      "recall": 0.5169
+    },
+    "TabNet": {
+      "accuracy": 0.8529,
+      "f1": 0.6753,
+      "precision": 0.8,
+      "recall": 0.5843
+    }
+  },
+  "Glucose_Regression": {
+    "LinearRegression": {
+      "MAE": 14.8604,
+      "R2": 0.6229
+    },
+    "MLP_NeuralNetwork": {
+      "MAE": 14.9439,
+      "R2": 0.5963
+    }
+  }
+}
