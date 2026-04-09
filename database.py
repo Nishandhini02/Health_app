@@ -245,7 +245,7 @@ def create_tables():
 
         c.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-            ("admin", _hash_password(admin_password), "admin")
+            ("admin1", _hash_password(admin_password), "admin")
         )
 
     # ── Other tables ──────────────────────────────────────────────────────
