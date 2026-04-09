@@ -2231,7 +2231,7 @@ with st.sidebar:
     _current_menu = st.session_state.get("menu", "About")
 
     for icon, label, tech in _feature_list:
-        if label == "Model Insights" and role != "admin1":
+        if label == "Model Insights" and role != "admin":
             continue
         _is_active = _current_menu == label
         _cls = "nav-btn-active" if _is_active else "nav-btn"
