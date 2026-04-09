@@ -222,7 +222,7 @@ def create_tables():
     #  app to change it after first login.
     # ─────────────────────────────────────────────────────────────────────
 
-    c.execute("SELECT id FROM users WHERE username='admin'")
+    c.execute("SELECT id FROM users WHERE username='admin1'")
     admin_exists = c.fetchone()
 
     if not admin_exists:
