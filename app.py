@@ -2240,7 +2240,7 @@ with st.sidebar:
             st.session_state.menu = label; st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    if role == "admin":
+    if role == "admin1":
         st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
         st.markdown(
             "<div style='font-size:0.7rem;color:#475569;text-transform:uppercase;"
@@ -2413,7 +2413,7 @@ elif menu == "Medication Info":
     show_medication_info(show_loader, username=username)
 
 elif menu == "Model Insights":
-    if role != "admin":
+    if role != "admin1":
         st.error("🚫 Model Insights is only available to administrators.")
     else:
         @st.cache_resource
@@ -2428,7 +2428,7 @@ elif menu == "Model Insights":
         show_model_insights(_load_insight_models())
 
 elif menu == "Admin Panel":
-    if role != "admin":
+    if role != "admin1":
         st.error("🚫 Access denied.")
     else:
         # Pass actual key counts so limits are calculated correctly
