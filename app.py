@@ -2438,13 +2438,6 @@
 #         )
 
 
-@st.cache_resource
-def get_models():
-    return load_ml_models()
-
-@st.cache_resource
-def get_rag_cached():
-    return load_rag()
 
 # app.py
 import streamlit as st
@@ -2475,6 +2468,13 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.lib.enums import TA_CENTER
 
+@st.cache_resource
+def get_models():
+    return load_ml_models()
+
+@st.cache_resource
+def get_rag_cached():
+    return load_rag()
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
