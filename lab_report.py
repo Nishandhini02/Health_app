@@ -355,7 +355,7 @@ from reportlab.lib.units import mm
 from reportlab.lib.enums import TA_CENTER
 from dotenv import load_dotenv; load_dotenv()
 import os
-
+from google import genai as _genai_module
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 

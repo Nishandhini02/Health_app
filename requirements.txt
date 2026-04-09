@@ -39,7 +39,7 @@ xgboost
 #pytorch-tabnet
 
 # AI & RAG (API Focused)
-#google-generativeai
+google-generativeai
 groq
 langchain
 langchain-community
