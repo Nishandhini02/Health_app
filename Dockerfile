@@ -20,7 +20,7 @@
 
 # # Command to run your app
 # CMD ["streamlit", "run", "app.py", "--server.port", "10000", "--server.address", "0.0.0.0"]
-
+# Dockerfile - CORRECTED
 FROM python:3.11-slim
 
 # Install system dependencies in one layer to save space
@@ -38,9 +38,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Added CORS and XSRF flags to prevent 502/WebSocket issues
-CMD ["streamlit", "run", "app.py", \
-     "--server.port", "10000", \
-     "--server.address", "0.0.0.0", \
-     "--server.enableCORS", "false", \
-     "--server.enableXsrfProtection", "false"]
+# Use shell form so $PORT env var is expanded at runtime
+CMD sh -c "streamlit run app.py \
+    --server.port=${PORT:-10000} \
+    --server.address=0.0.0.0 \
+    --server.enableCORS=false \
+    --server.enableXsrfProtection=false \
+    --server.headless=true"
