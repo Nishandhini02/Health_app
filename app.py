@@ -1272,8 +1272,8 @@ def _load_keys(secret_name: str, env_fallback: str) -> list:
     #     return []
     # return [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
 
-_API_KEYS  = _load_keys("gemini_keys", "GEMINI_API_KEY")
-_GROQ_KEYS = _load_keys("groq_keys",   "GROQ_API_KEY")
+_API_KEYS  = _load_keys("GEMINI_API_KEY", "GEMINI_API_KEY")
+_GROQ_KEYS = _load_keys("GROQ_API_KEY",   "GROQ_API_KEY")
 
 if not _API_KEYS:
     st.error("❌ GEMINI_API_KEY not found in .env file.")
