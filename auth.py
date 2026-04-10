@@ -1,23 +1,3 @@
-# import sqlite3
-# from database import get_connection, create_tables
-
-# create_tables()
-
-# def register_user(username, password):
-#     try:
-#         conn = get_connection()
-#         c = conn.cursor()
-#         c.execute("INSERT INTO users (username,password) VALUES (?,?)", (username,password))
-#         conn.commit()
-#         return True, "Registered successfully"
-#     except:
-#         return False, "User already exists"
-
-# def login_user(username, password):
-#     conn = get_connection()
-#     c = conn.cursor()
-#     c.execute("SELECT * FROM users WHERE username=? AND password=?", (username,password))
-#     return c.fetchone() is not None
 
 
 # auth.py
