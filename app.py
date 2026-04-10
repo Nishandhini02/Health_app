@@ -2015,7 +2015,8 @@ def _new_chat(username: str):
     if len(sessions) >= MAX_CHAT_SESSIONS:
         sessions = sessions[:MAX_CHAT_SESSIONS - 1]
     cid = str(uuid.uuid4())
-    now = datetime.now().strftime("%d %b %Y, %I:%M %p")
+    ist = pytz.timezone("Asia/Kolkata")
+    now = datetime.now(ist).strftime("%d %b %Y, %I:%M %p")
     sessions.insert(0, {"id": cid, "title": "New Chat", "date": now, "messages": []})
     st.session_state.chat_sessions  = sessions
     st.session_state.active_chat_id = cid

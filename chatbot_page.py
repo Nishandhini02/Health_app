@@ -411,7 +411,8 @@ def show_chatbot(username, _init_chat_state, _new_chat, _get_active_session,
                     )
                     if st.button(sug, key=f"sug_{i}", width='stretch'):
                         _auto_title(active_sess, sug, username)
-                        ts = datetime.now().strftime("%I:%M %p")
+                        ist = pytz.timezone("Asia/Kolkata")
+                        ts = datetime.now(ist).strftime("%I:%M %p")
                         active_sess["messages"].append(
                             {"role": "user", "content": sug, "time": ts})
                         _save_user_history(username, st.session_state.chat_sessions)
