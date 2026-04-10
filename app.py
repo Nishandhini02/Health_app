@@ -2008,13 +2008,14 @@ def _init_chat_state(username: str):
         st.session_state["_history_user"] = username
     if "chat_sessions"  not in st.session_state: st.session_state.chat_sessions  = []
     if "active_chat_id" not in st.session_state: st.session_state.active_chat_id = None
-
+import pytz
+from datetime import datetime
 def _new_chat(username: str):
     sessions = st.session_state.chat_sessions
     if len(sessions) >= MAX_CHAT_SESSIONS:
         sessions = sessions[:MAX_CHAT_SESSIONS - 1]
     cid = str(uuid.uuid4())
-    now = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p")
+    now = datetime.now().strftime("%d %b %Y, %I:%M %p")
     sessions.insert(0, {"id": cid, "title": "New Chat", "date": now, "messages": []})
     st.session_state.chat_sessions  = sessions
     st.session_state.active_chat_id = cid
