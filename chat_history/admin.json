@@ -1,0 +1,25 @@
+[
+  {
+    "id": "1e6d97a4-8fe2-4af9-abd0-56ca845307aa",
+    "title": "New Chat",
+    "date": "01 Apr 2026, 03:37 PM",
+    "messages": []
+  },
+  {
+    "id": "b39bd0ae-bb50-459f-9c24-1c97c1b78fdb",
+    "title": "🫘 What are early signs of kidney disease…",
+    "date": "01 Apr 2026, 02:29 PM",
+    "messages": [
+      {
+        "role": "user",
+        "content": "🫘 What are early signs of kidney disease?",
+        "time": "02:41 PM"
+      },
+      {
+        "role": "assistant",
+        "content": "Early signs of kidney disease often don't cause noticeable symptoms, which is why regular check-ups are important. However, a key early indicator that can be detected through tests is:\n\n*   **Protein in the urine (proteinuria):** This means your kidneys are allowing protein to leak into your urine, which they shouldn't do when healthy.\n*   **A decline in your estimated Glomerular Filtration Rate (eGFR):** This is a lab test that measures how well your kidneys are filtering waste from your blood each minute. Even if your eGFR is still within the normal range (90 or above), a decline from previous levels can indicate early kidney damage.",
+        "time": "02:41 PM"
+      }
+    ]
+  }
+]

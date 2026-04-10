@@ -1,0 +1,34 @@
+[
+  {
+    "date": "06 Apr 2026, 05:22 PM",
+    "symptoms": [
+      "Fever",
+      "Headache"
+    ],
+    "result": "⚠️ All Groq keys failed. Last error: Error code: 400 - {'error': {'message': 'The model `llama3-8b-8192` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}"
+  },
+  {
+    "date": "06 Apr 2026, 05:23 PM",
+    "symptoms": [
+      "Fever",
+      "Headache"
+    ],
+    "result": "⚠️ All Groq keys failed. Last error: Error code: 400 - {'error': {'message': 'The model `llama3-8b-8192` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}"
+  },
+  {
+    "date": "06 Apr 2026, 05:23 PM",
+    "symptoms": [
+      "Fever",
+      "Headache"
+    ],
+    "result": "⚠️ All Groq keys failed. Last error: Error code: 400 - {'error': {'message': 'The model `llama3-8b-8192` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}"
+  },
+  {
+    "date": "06 Apr 2026, 05:24 PM",
+    "symptoms": [
+      "Fever",
+      "Headache"
+    ],
+    "result": "**Medical Assessment**\n\n## 🔍 Symptom Summary\nA 30-year-old patient presents with symptoms of fever and headache that have developed within less than 1 day, with moderate severity.\n\n## 🏥 Possible Conditions\n### 1. **Viral Infection** — Medium\nWhy: Common presentation of viral infections include fever, headache, and sudden onset.\nKey distinguishing features: Typically accompanied by other symptoms such as sore throat, runny nose, or fatigue.\n\n### 2. **Sinusitis** — Medium\nWhy: Inflammation of the sinuses can cause headaches, fever, and nasal congestion.\nKey distinguishing features: Typically worsens with bending or lying down, and often accompanied by yellow or green discharge.\n\n### 3. **Migraine** — High\nWhy: Migraines are characterized by severe headaches accompanied by fever and other non-specific symptoms.\nKey distinguishing features: Typically unilateral (one-sided), accompanied by photophobia or phonophobia.\n\n### 4. **Tonsillitis** — Low\nWhy: Inflammation of the tonsils can cause fever, headache, and sore throat.\nKey distinguishing features: Typically accompanied by difficulty swallowing or abdominal pain.\n\n### 5. **Menstrual Migraine (in premenopausal women)** — Low\nWhy: Some women experience migraines accompanied by fever due to hormonal changes during their menstrual cycle.\nKey distinguishing features: Typically recurrent, accompanied by other symptoms such as mood changes or breast tenderness.\n\n## ⚠️ Red Flag Warning Signs\n- Severe headache with sudden onset\n- Fever above 103°F (39.4°C)\n- Severe vomiting or confusion\n- Sudden weakness or numbness in the face, arm, or leg\n\n## 🩺 Recommended Next Steps\n- Consult an **Primary Care Physician (PCP)** or **Urgent Care Doctor**\n- Tests may include: laboratory tests to rule out infection (complete blood count, blood chemistry), imaging studies (CT scan or MRI) for sinusitis or other causes.\n- **Timeline:** Urgent (within 24 hours) for patients with severe symptoms, moderate (within days) for those with moderate symptoms.\n\n## 💊 General Self-Care (if appropriate)\n- Rest and hydration to help manage symptoms\n- Over-the-counter pain relief medications (such as acetaminophen or ibuprofen) as needed\n- Steam inhalation or saline nasal sprays to help relieve sinus congestion (if suspected sinusitis)\n\n## 🚨 Urgency Level\n**URGENT** (within 24h) for patients with severe symptoms or warning signs. SOON (within a week) for those with moderate symptoms and no warning signs. ROUTINE for patients with mild symptoms and no concerns for complications."
+  }
+]

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "6fd581f8-7e8f-4dd6-9a45-fecda5562417",
+    "title": "Give the Summary of clinical practice gu…",
+    "date": "01 Apr 2026, 11:46 AM",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Give the Summary of clinical practice guidelines for cardiovascular disease in CKD .",
+        "time": "11:47 AM"
+      },
+      {
+        "role": "assistant",
+        "content": "Based on the provided context, the Summary of clinical practice guidelines for cardiovascular disease in CKD covers the following areas:\n\n1.  **Traditional cardiovascular risk factors** (Guidelines 1.1-1.8)\n2.  **Hyperhomocysteinaemia and folate supplementation** (Guidelines 2.1-2.3)\n3.  **Secondary prevention of cardiovascular risk** (Guidelines 3.1-3.6)\n4.  **Cardiac investigations and coronary revascularisation** (Guidelines 4.1-4.3)\n5.  **Hypertension in dialysis patients** (Guidelines 5.1-5.7)",
+        "time": "11:48 AM"
+      }
+    ]
+  }
+]

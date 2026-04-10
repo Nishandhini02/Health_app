@@ -3,8 +3,7 @@
 __pycache__/
 *.pyc
 
-*.json
-!models/model_metrics.json
+
 *.db
 models/*.zip
 .venv/

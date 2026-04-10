@@ -1,0 +1,79 @@
+[
+  {
+    "timestamp": "2026-04-07 11:37:14",
+    "date": "2026-04-07",
+    "provider": "groq",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-07 11:39:26",
+    "date": "2026-04-07",
+    "provider": "groq",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-07 11:39:26",
+    "date": "2026-04-07",
+    "provider": "groq",
+    "feature": "diet",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-07 11:40:40",
+    "date": "2026-04-07",
+    "provider": "gemini",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-07 11:49:54",
+    "date": "2026-04-07",
+    "provider": "gemini",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-08 14:06:51",
+    "date": "2026-04-08",
+    "provider": "groq",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-08 14:06:51",
+    "date": "2026-04-08",
+    "provider": "groq",
+    "feature": "diet",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-08 14:06:57",
+    "date": "2026-04-08",
+    "provider": "groq",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-08 14:06:57",
+    "date": "2026-04-08",
+    "provider": "groq",
+    "feature": "diet",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-08 14:07:15",
+    "date": "2026-04-08",
+    "provider": "groq",
+    "feature": "general",
+    "success": true
+  },
+  {
+    "timestamp": "2026-04-08 14:07:15",
+    "date": "2026-04-08",
+    "provider": "groq",
+    "feature": "diet",
+    "success": true
+  }
+]

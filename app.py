@@ -1943,12 +1943,12 @@ def create_disease_pdf(age, bmi, glucose, diabetes_pct, hyper_pct,
 # HEALTH PROGRESS TRACKER HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 PROGRESS_DIR = "health_progress"
-
+ist = pytz.timezone("Asia/Kolkata")
 def save_prediction(patient_id: str, age, bmi, glucose, d, h, c, k):
     os.makedirs(PROGRESS_DIR, exist_ok=True)
     path = os.path.join(PROGRESS_DIR, f"{patient_id}.json")
     record = {
-        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "date": datetime.now(ist).strftime("%Y-%m-%d %H:%M"),
         "age": age, "bmi": round(float(bmi),1), "glucose": glucose,
         "diabetes": round(float(d)*100,1), "hypertension": round(float(h)*100,1),
         "cardiovascular": round(float(c)*100,1), "kidney": round(float(k)*100,1)
