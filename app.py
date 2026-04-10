@@ -3808,7 +3808,7 @@ if not _API_KEYS:
 if not _GROQ_KEYS:
     st.warning("⚠️ GROQ_API_KEY not found — Symptom, BMI, Diet, Medication features won't work.")
 
-def gemini_generate(prompt: str, model_name: str = "gemini-1.5-flash",
+def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
                     feature: str = "general") -> str:
     last_error = None
     for i, key in enumerate(_API_KEYS):
