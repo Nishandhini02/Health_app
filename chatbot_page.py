@@ -1,6 +1,7 @@
 import streamlit as st
 import datetime
-
+from datetime import datetime
+import pytz
 
 def show_chatbot(username, _init_chat_state, _new_chat, _get_active_session,
                  _auto_title, _delete_chat, _save_user_history, _call_rag,
@@ -435,7 +436,9 @@ def show_chatbot(username, _init_chat_state, _new_chat, _get_active_session,
             show_loader(loader_ph, "Thinking…")
             ans = _call_rag(pending_q)
             loader_ph.empty()
-            ts_a = datetime.datetime.now().strftime("%I:%M %p")
+            ist = pytz.timezone("Asia/Kolkata")
+            ts_a= datetime.now(ist).strftime("%I:%M %p")
+            #ts_a = datetime.datetime.now().strftime("%I:%M %p")
             with st.chat_message("assistant"):
                 st.write(ans)
                 st.caption(ts_a)
