@@ -1266,11 +1266,11 @@ def _load_keys(secret_name: str, env_fallback: str) -> list:
         return [k.strip().strip('"').strip("'") for k in str(val).split(",") if k.strip()]
     except Exception:
         pass
-    # Local .env fallback
-    raw = os.environ.get(env_fallback, "").strip()
-    if not raw:
-        return []
-    return [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
+    # # Local .env fallback
+    # raw = os.environ.get(env_fallback, "").strip()
+    # if not raw:
+    #     return []
+    # return [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
 
 _API_KEYS  = _load_keys("gemini_keys", "GEMINI_API_KEY")
 _GROQ_KEYS = _load_keys("groq_keys",   "GROQ_API_KEY")
