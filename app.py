@@ -1238,14 +1238,42 @@ load_dotenv()
 # GEMINI DUAL-KEY SETUP
 # .env format:  GEMINI_API_KEY=key1,key2
 # ─────────────────────────────────────────────────────────────────────────────
-def _load_keys(env_var: str) -> list:
-    raw = os.environ.get(env_var, "").strip()
+# def _load_keys(env_var: str) -> list:
+#     raw = os.environ.get(env_var, "").strip()
+#     if not raw:
+#         return []
+#     return [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
+
+# _API_KEYS  = _load_keys("GEMINI_API_KEY")
+# _GROQ_KEYS = _load_keys("GROQ_API_KEY")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GEMINI DUAL-KEY SETUP
+# Streamlit Cloud secrets.toml format:
+#   gemini_keys = ["key1", "key2", "key3"]
+#   groq_keys   = ["key1", "key2", "key3"]
+# Local .env fallback:
+#   GEMINI_API_KEY=key1,key2
+#   GROQ_API_KEY=key1,key2
+# ─────────────────────────────────────────────────────────────────────────────
+def _load_keys(secret_name: str, env_fallback: str) -> list:
+    # Streamlit Cloud — reads TOML array directly as Python list
+    try:
+        val = st.secrets[secret_name]
+        if isinstance(val, list):
+            return [k.strip() for k in val if k.strip()]
+        return [k.strip().strip('"').strip("'") for k in str(val).split(",") if k.strip()]
+    except Exception:
+        pass
+    # Local .env fallback
+    raw = os.environ.get(env_fallback, "").strip()
     if not raw:
         return []
     return [k.strip().strip('"').strip("'") for k in raw.split(",") if k.strip()]
 
-_API_KEYS  = _load_keys("GEMINI_API_KEY")
-_GROQ_KEYS = _load_keys("GROQ_API_KEY")
+_API_KEYS  = _load_keys("gemini_keys", "GEMINI_API_KEY")
+_GROQ_KEYS = _load_keys("groq_keys",   "GROQ_API_KEY")
 
 if not _API_KEYS:
     st.error("❌ GEMINI_API_KEY not found in .env file.")
