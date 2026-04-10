@@ -45,7 +45,7 @@ langchain
 langchain-community
 langchain-google-genai
 python-dotenv
-
+pytz
 # Vector Search & Embeddings
 faiss-cpu
 sentence-transformers
