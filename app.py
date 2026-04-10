@@ -1280,10 +1280,10 @@ if not _API_KEYS:
 if not _GROQ_KEYS:
     st.warning("⚠️ GROQ_API_KEY not found in .env — Symptom, BMI, Diet, Medication features won't work.")
 
-# Configure genai with first key on startup
-if _API_KEYS:
-    #genai.client(api_key=_API_KEYS[0])
-    pass
+# # Configure genai with first key on startup
+# if _API_KEYS:
+#     #genai.client(api_key=_API_KEYS[0])
+#     pass
 
 def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
                     feature: str = "general") -> str:
@@ -1317,7 +1317,7 @@ def gemini_generate(prompt: str, model_name: str = "gemini-2.5-flash",
     except Exception:
         pass
     return f"⚠️ All Gemini API keys failed. Last error: {last_error}"
-from google import genai
+#from google import genai
 # Reduce memory — only load models when actually needed
 # import os
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"   # suppress TF logs if TF somehow present
