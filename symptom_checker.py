@@ -166,8 +166,10 @@ State clearly: EMERGENCY / URGENT (within 24h) / SOON (within week) / ROUTINE"""
                     unsafe_allow_html=True
                 )
 
-
 def _save_symptom_history(username, symptoms, result):
+    import pytz
+    from datetime import datetime
+    ist = pytz.timezone("Asia/Kolkata")
     os.makedirs("symptom_history", exist_ok=True)
     path = f"symptom_history/{username}.json"
     history = []
@@ -178,7 +180,7 @@ def _save_symptom_history(username, symptoms, result):
         except:
             pass
     history.append({
-        "date": datetime.datetime.now().strftime("%d %b %Y, %I:%M %p"),
+        "date": datetime.now(ist).strftime("%d %b %Y, %I:%M %p"),
         "symptoms": symptoms,
         "result": result
     })
