@@ -741,7 +741,7 @@ Your response must include all sections below, written entirely in {lang}:
 3. ⚠️ **Key Findings**
    - List abnormal or concerning values clearly
 
-4. 💊 **Medical Suggestions**
+4. 💊 **Medical Suggestions**--give in 3 lines
    - Based on the results, give specific dietary advice
    - Lifestyle changes recommended
    - Medications or supplements to discuss with doctor

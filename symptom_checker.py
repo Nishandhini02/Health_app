@@ -92,7 +92,7 @@ Provide a structured medical assessment with these sections:
 Brief overview of the symptom pattern.
 
 ## 🏥 Possible Conditions
-List 3-5 possible conditions (most likely first). For each:
+List 3possible conditions (most likely first). For each:
 - **Condition name** — Likelihood: High/Medium/Low
   - Why: Brief reason
   - Key distinguishing features
@@ -100,7 +100,7 @@ List 3-5 possible conditions (most likely first). For each:
 ## ⚠️ Red Flag Warning Signs
 List any symptoms in this presentation that need IMMEDIATE medical attention.
 
-## 🩺 Recommended Next Steps
+## 🩺 Recommended Next Steps.Give in 3 lines 
 - What type of doctor to consult
 - Tests that may be ordered
 - Timeline (urgent/within days/routine)
