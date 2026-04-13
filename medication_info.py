@@ -433,13 +433,12 @@ Simple explanation of mechanism.
 Common doses, timing, with/without food. (Do NOT prescribe — general info only)
 
 ## ⚠️ Common Side Effects
-List with frequency (common/uncommon/rare).
+List with frequency (common/uncommon/rare).Give 3.
 
 ## 🚫 Precautions & Contraindications
-Who should NOT take this, when to be careful.
+Who should NOT take this, when to be careful.Give 3
 
-## ❓ Patient FAQs
-2-3 common questions patients ask about this drug.
+
 
 Always emphasise consulting a doctor or pharmacist."""
 

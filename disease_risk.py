@@ -382,7 +382,7 @@ End with: ⚠️ This is general information only, not a prescription.
 
 ---
 ### 🧑‍⚕️ Doctor Follow-up Questions
-List exactly 5 numbered questions a doctor would ask this patient based on their specific risks. One per line, no extra explanation.
+List exactly 3 numbered questions a doctor would ask this patient based on their specific risks. One per line, no extra explanation.
 """
 
 

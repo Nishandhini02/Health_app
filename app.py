@@ -1949,12 +1949,104 @@ def load_progress(patient_id: str) -> list:
     return []
 
 
+# # ─────────────────────────────────────────────────────────────────────────────
+# # CHAT HISTORY HELPERS
+# # ─────────────────────────────────────────────────────────────────────────────
+
+# CHAT_DIR          = "chat_history"
+# MAX_CHAT_SESSIONS = 50
+
+# def _history_path(username: str) -> str:
+#     os.makedirs(CHAT_DIR, exist_ok=True)
+#     return os.path.join(CHAT_DIR, f"{username}.json")
+
+# def _load_user_history(username: str) -> list:
+#     path = _history_path(username)
+#     if os.path.exists(path):
+#         try:
+#             with open(path, "r", encoding="utf-8") as f: return json.load(f)
+#         except Exception: return []
+#     return []
+
+# def _save_user_history(username: str, sessions: list):
+#     if len(sessions) > MAX_CHAT_SESSIONS:
+#         sessions = sessions[:MAX_CHAT_SESSIONS]
+#         st.session_state.chat_sessions = sessions
+#     path = _history_path(username)
+#     try:
+#         with open(path, "w", encoding="utf-8") as f:
+#             json.dump(sessions, f, ensure_ascii=False, indent=2)
+#     except Exception as e:
+#         st.warning(f"Could not save chat history: {e}")
+
+# def _init_chat_state(username: str):
+#     if st.session_state.get("_history_user") != username:
+#         st.session_state.chat_sessions  = _load_user_history(username)
+#         st.session_state.active_chat_id = (
+#             st.session_state.chat_sessions[0]["id"]
+#             if st.session_state.chat_sessions else None
+#         )
+#         st.session_state["_history_user"] = username
+#     if "chat_sessions"  not in st.session_state: st.session_state.chat_sessions  = []
+#     if "active_chat_id" not in st.session_state: st.session_state.active_chat_id = None
+
+# import pytz
+# from datetime import datetime
+
+# def _new_chat(username: str):
+#     sessions = st.session_state.chat_sessions
+#     if len(sessions) >= MAX_CHAT_SESSIONS:
+#         sessions = sessions[:MAX_CHAT_SESSIONS - 1]
+#     cid = str(uuid.uuid4())
+#     ist = pytz.timezone("Asia/Kolkata")
+#     now = datetime.now(ist).strftime("%d %b %Y, %I:%M %p")
+#     sessions.insert(0, {"id": cid, "title": "New Chat", "date": now, "messages": []})
+#     st.session_state.chat_sessions  = sessions
+#     st.session_state.active_chat_id = cid
+#     _save_user_history(username, sessions)
+
+# def _get_active_session():
+#     for s in st.session_state.chat_sessions:
+#         if s["id"] == st.session_state.active_chat_id:
+#             return s
+#     return None
+
+# def _auto_title(session, first_msg: str, username: str):
+#     if session["title"] == "New Chat":
+#         session["title"] = first_msg[:40] + ("…" if len(first_msg) > 40 else "")
+#         _save_user_history(username, st.session_state.chat_sessions)
+
+# def _delete_chat(cid: str, username: str):
+#     st.session_state.chat_sessions = [
+#         s for s in st.session_state.chat_sessions if s["id"] != cid
+#     ]
+#     if st.session_state.active_chat_id == cid:
+#         st.session_state.active_chat_id = (
+#             st.session_state.chat_sessions[0]["id"]
+#             if st.session_state.chat_sessions else None
+#         )
+#     _save_user_history(username, st.session_state.chat_sessions)
+
+# def _call_rag(question: str) -> str:
+#     try:
+#         result = qa(question)
+#         if isinstance(result, dict):
+#             ans = result.get("answer") or result.get("result") or ""
+#         elif isinstance(result, str):
+#             ans = result
+#         else:
+#             ans = str(result)
+#         ans = ans.strip()
+#         return ans or "I'm sorry, I couldn't find a relevant answer. Please rephrase."
+#     except Exception as e:
+#         return f"⚠️ Error: {e}"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CHAT HISTORY HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
-
-CHAT_DIR          = "chat_history"
-MAX_CHAT_SESSIONS = 50
+import pytz
+from datetime import datetime
+CHAT_DIR = "chat_history"
 
 def _history_path(username: str) -> str:
     os.makedirs(CHAT_DIR, exist_ok=True)
@@ -1964,14 +2056,13 @@ def _load_user_history(username: str) -> list:
     path = _history_path(username)
     if os.path.exists(path):
         try:
-            with open(path, "r", encoding="utf-8") as f: return json.load(f)
-        except Exception: return []
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
     return []
 
 def _save_user_history(username: str, sessions: list):
-    if len(sessions) > MAX_CHAT_SESSIONS:
-        sessions = sessions[:MAX_CHAT_SESSIONS]
-        st.session_state.chat_sessions = sessions
     path = _history_path(username)
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -1990,13 +2081,8 @@ def _init_chat_state(username: str):
     if "chat_sessions"  not in st.session_state: st.session_state.chat_sessions  = []
     if "active_chat_id" not in st.session_state: st.session_state.active_chat_id = None
 
-import pytz
-from datetime import datetime
-
 def _new_chat(username: str):
     sessions = st.session_state.chat_sessions
-    if len(sessions) >= MAX_CHAT_SESSIONS:
-        sessions = sessions[:MAX_CHAT_SESSIONS - 1]
     cid = str(uuid.uuid4())
     ist = pytz.timezone("Asia/Kolkata")
     now = datetime.now(ist).strftime("%d %b %Y, %I:%M %p")
