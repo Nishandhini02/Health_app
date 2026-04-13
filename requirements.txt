@@ -35,8 +35,8 @@ scikit-learn
 joblib
 
 xgboost
-tensorflow-cpu
-pytorch-tabnet
+#tensorflow-cpu
+#pytorch-tabnet
 
 # AI & RAG (API Focused)
 google-generativeai
