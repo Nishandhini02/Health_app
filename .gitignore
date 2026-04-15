@@ -3,7 +3,7 @@
 __pycache__/
 *.pyc
 
-
+plots/
 *.db
 models/*.zip
 .venv/
