@@ -662,11 +662,11 @@ def create_rag(api_key: str = ""):
 
     # Prompt (same as original)
     prompt = ChatPromptTemplate.from_template("""
-You are a knowledgeable and empathetic medical assistant.
+You are a medical assistant.
 
-Use the provided context to answer the question accurately.
-If the context does not fully cover the question, supplement with your medical knowledge.
-Always be clear, concise, and patient-friendly.
+1. Use the provided context as the primary source for answering.
+2. If the answer is not available in the context, use your medical knowledge.
+3. Clearly indicate the source: "From the document" or "From general medical knowledge".
 
 Context:
 {context}
