@@ -3042,19 +3042,96 @@ button {
 
 <script>
 (function() {
+    /* ── 1. Intercept CSSStyleSheet.insertRule ──────────────────────────────
+       Emotion injects styles via insertRule — we strip blur BEFORE it lands
+       in the browser's CSSOM so !important overrides aren't even needed.    */
+    var _origInsert = CSSStyleSheet.prototype.insertRule;
+    CSSStyleSheet.prototype.insertRule = function(rule, index) {
+        var cleaned = rule
+            .split('backdrop-filter').join('backdrop-filter:none;/*')
+            .split('-webkit-backdrop-filter').join('-webkit-backdrop-filter:none;/*');
+        /* strip blur() from filter */
+        cleaned = cleaned.replace(/filter:[^;}"']*blur[^;}"']*/gi, 'filter:none');
+        return _origInsert.call(this, cleaned, index);
+    };
+
+    /* ── 2. Intercept element.style setProperty ─────────────────────────────
+       Baseweb sets styles directly via el.style.filter etc.                 */
+    var _origSet = CSSStyleDeclaration.prototype.setProperty;
+    CSSStyleDeclaration.prototype.setProperty = function(prop, val, priority) {
+        var p = prop.toLowerCase().replace(/-/g, '');
+        if (p === 'backdropfilter' || p === 'webkitbackdropfilter') {
+            return _origSet.call(this, prop, 'none', priority);
+        }
+        if (p === 'filter' && typeof val === 'string' && val.indexOf('blur') > -1) {
+            return _origSet.call(this, prop, 'none', priority);
+        }
+        return _origSet.call(this, prop, val, priority);
+    };
+
+    /* ── 3. Override inline style setters (el.style.filter = ...) ───────────
+       Some Baseweb components assign directly to the property descriptor.   */
+    var styleProto = CSSStyleDeclaration.prototype;
+    var _filterDesc = Object.getOwnPropertyDescriptor(styleProto, 'filter') ||
+                      Object.getOwnPropertyDescriptor(HTMLElement.prototype.style.__proto__, 'filter');
+    if (_filterDesc && _filterDesc.set) {
+        var _filterSet = _filterDesc.set;
+        Object.defineProperty(styleProto, 'filter', {
+            get: _filterDesc.get,
+            set: function(v) {
+                if (typeof v === 'string' && v.indexOf('blur') > -1) v = 'none';
+                _filterSet.call(this, v);
+            },
+            configurable: true
+        });
+    }
+    ['backdropFilter', 'WebkitBackdropFilter'].forEach(function(prop) {
+        var desc = Object.getOwnPropertyDescriptor(styleProto, prop);
+        if (desc && desc.set) {
+            Object.defineProperty(styleProto, prop, {
+                get: desc.get,
+                set: function(v) { desc.set.call(this, 'none'); },
+                configurable: true
+            });
+        }
+    });
+
+    /* ── 4. Scan + kill existing computed blur ──────────────────────────────
+       For any elements already rendered before our intercept kicked in.     */
     function killBlur(el) {
         if (!el || !el.style) return;
         var s = el.style;
-        if (s.backdropFilter)       s.backdropFilter = 'none';
-        if (s.webkitBackdropFilter) s.webkitBackdropFilter = 'none';
-        if (s.filter && s.filter.indexOf('blur') > -1) s.filter = 'none';
+        if (s.backdropFilter && s.backdropFilter !== 'none')
+            s.backdropFilter = 'none';
+        if (s.webkitBackdropFilter && s.webkitBackdropFilter !== 'none')
+            s.webkitBackdropFilter = 'none';
+        if (s.filter && s.filter.indexOf('blur') > -1)
+            s.filter = 'none';
         if (s.transition && (s.transition.indexOf('filter') > -1 ||
-            s.transition.indexOf('backdrop') > -1)) s.transition = 'none';
+            s.transition.indexOf('backdrop') > -1))
+            s.transition = 'none';
     }
 
-    function scanAll() {
-        document.querySelectorAll('*').forEach(killBlur);
+    function nukeBlurFromSheet(sheet) {
+        try {
+            var rules = sheet.cssRules || [];
+            for (var i = 0; i < rules.length; i++) {
+                var r = rules[i];
+                if (!r.style) continue;
+                if (r.style.backdropFilter) r.style.backdropFilter = 'none';
+                if (r.style.webkitBackdropFilter) r.style.webkitBackdropFilter = 'none';
+                if (r.style.filter && r.style.filter.indexOf('blur') > -1)
+                    r.style.filter = 'none';
+            }
+        } catch(e) {}
     }
+
+    function nukeAllSheets() {
+        var sheets = document.styleSheets;
+        for (var i = 0; i < sheets.length; i++) nukeBlurFromSheet(sheets[i]);
+    }
+
+    function scanAll() { document.querySelectorAll('*').forEach(killBlur); }
 
     function killSteppers() {
         var sel = [
@@ -3071,25 +3148,20 @@ button {
             '[data-baseweb="checkbox"] *',
             '[data-baseweb="slider"] *',
             '[data-baseweb="tag"] *',
-            'button',
-            'input',
-            'select'
+            'button', 'input', 'select'
         ].join(',');
         document.querySelectorAll(sel).forEach(function(el) {
             el.style.filter = 'none';
             el.style.backdropFilter = 'none';
             el.style.webkitBackdropFilter = 'none';
-            if (!el.classList.contains('stButton') &&
-                el.getAttribute('data-testid') !== 'baseButton-secondary' &&
-                el.getAttribute('data-testid') !== 'baseButton-primary') {
-                el.style.transition = 'background 0.12s ease, color 0.12s ease';
-            }
         });
     }
 
-    scanAll();
-    killSteppers();
+    function fullNuke() { scanAll(); nukeAllSheets(); killSteppers(); }
 
+    fullNuke();
+
+    /* ── 5. MutationObserver — catch Emotion re-renders ────────────────────*/
     new MutationObserver(function(muts) {
         muts.forEach(function(m) {
             killBlur(m.target);
@@ -3098,7 +3170,12 @@ button {
                     killBlur(n);
                     if (n.querySelectorAll) n.querySelectorAll('*').forEach(killBlur);
                 }
+                /* If Emotion injected a new <style> tag, nuke its rules */
+                if (n.tagName === 'STYLE' && n.sheet) nukeBlurFromSheet(n.sheet);
             });
+            /* Also handle modified <style> sheets */
+            if (m.target.tagName === 'STYLE' && m.target.sheet)
+                nukeBlurFromSheet(m.target.sheet);
         });
         killSteppers();
     }).observe(document.documentElement, {
@@ -3106,6 +3183,7 @@ button {
         attributes: true, attributeFilter: ['style', 'class']
     });
 
+    /* ── 6. Event listeners — 18 events catch every interaction ────────────*/
     [
         'mousedown', 'mouseup', 'mouseover', 'mouseenter', 'mouseleave',
         'click', 'keydown', 'keyup', 'keypress',
@@ -3113,17 +3191,11 @@ button {
         'pointerdown', 'pointerup', 'pointermove',
         'touchstart', 'touchend'
     ].forEach(function(ev) {
-        document.addEventListener(ev, function() {
-            scanAll();
-            killSteppers();
-        }, true);
+        document.addEventListener(ev, fullNuke, true);
     });
 
-    /* 20ms poll catches hover flash on stepper +/- */
-    setInterval(function() {
-        scanAll();
-        killSteppers();
-    }, 20);
+    /* ── 7. 20ms poll — last resort for any remaining flash ─────────────────*/
+    setInterval(fullNuke, 20);
 })();
 </script>
 """, unsafe_allow_html=True)
