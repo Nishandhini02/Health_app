@@ -195,7 +195,7 @@ def show_bmi_calculator(show_loader, groq_generate=None):
                     f"Stress={stress}, Health Score={score}/100 Grade={grade}."
                 ),
                 system=(
-                    "You are a health advisor. Give 4 specific, actionable health "
+                    "You are a health advisor. Give 3 specific, actionable health "
                     "improvement tips in bullet points. Be concise and practical. "
                     "Focus on the lowest scoring areas."
                 ),
