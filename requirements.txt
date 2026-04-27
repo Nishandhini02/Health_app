@@ -8,7 +8,7 @@
 # pytesseract
 # pillow
 # google-generativeai
-# deep-translator
+deep-translator
 # langchain
 # langchain-community
 # langchain-google-genai
