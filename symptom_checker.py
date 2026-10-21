@@ -337,7 +337,7 @@ def show_symptom_checker(show_loader, groq_generate=None):
                 result = groq_generate(
                     prompt=_build_prompt(symptoms_str, context),
                     system=_SYSTEM,
-                    model="llama-3.1-8b-instant",
+                    model="qwen/qwen3.8-27b",
                     feature="symptom_checker",
                 )
 
