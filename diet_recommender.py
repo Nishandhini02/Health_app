@@ -106,7 +106,7 @@ Keep each meal to one line. No explanations. No extra text."""
                 plan_text = groq_generate(
                     prompt=prompt,
                     system="You are a dietitian. Be concise. Give only what is asked. No extra commentary.",
-                    model="llama-3.1-8b-instant"
+                    model="qwen/qwen3.8-27b"
                 )
             else:
                 plan_text = "⚠️ Groq API not configured. Check your .env file."
