@@ -199,7 +199,7 @@ def show_bmi_calculator(show_loader, groq_generate=None):
                     "improvement tips in bullet points. Be concise and practical. "
                     "Focus on the lowest scoring areas."
                 ),
-                model="llama-3.1-8b-instant"
+                model="qwen/qwen3.8-27b"
             )
 
             loader_ph.empty()
