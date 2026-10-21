@@ -95,7 +95,7 @@ def gemini_generate(prompt: str,
 
 def groq_generate(prompt: str,
                   system: str = "You are a helpful assistant.",
-                  model:  str = "llama-3.1-8b-instant",
+                  model:  str = "qwen/qwen3.8-27b",
                   feature: str = "general") -> str:
     if not _GROQ_KEYS:
         return "⚠️ No Groq API keys configured."
